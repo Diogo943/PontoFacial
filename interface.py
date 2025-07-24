@@ -1219,6 +1219,12 @@ class StrucFrame():
         from modulos.matrizrigidez import resultado
     
         resultado.executar()
+
+        for i in range(1,self.no.n_no + 1):
+            self.no.exibir_reacoes_no(i)
+
+        for i in range(1,self.no.n_no + 1):
+            self.no.exibir_deslocamento_no(i)
         
     def fechar_com_seguranca(self):
         try:
