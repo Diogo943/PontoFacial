@@ -1216,12 +1216,10 @@ class StrucFrame():
             self.janela_ajuste_grid.focus_set()
 
     def run(self, event):
-        print('estou')
         from modulos.matrizrigidez import resultado
-        print('aqui')
-        resultado.executar()
-        print('agora')
     
+        resultado.executar()
+        
     def fechar_com_seguranca(self):
         try:
             self.canvas.get_tk_widget().quit()
