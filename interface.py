@@ -1,15 +1,3 @@
-'''
-import subprocess
-
-bibliotecas_requeridas = ['customtkinter','pandas','numpy','matplotlib']
-
-for biblioteca in bibliotecas_requeridas:
-    try:
-        __import__(biblioteca)
-    except ImportError:
-        subprocess.check_call(['python', '-m', 'pip', 'install', biblioteca])
-'''
-
 import os
 import sys
 os.environ['TK_SCALE'] = '1'
