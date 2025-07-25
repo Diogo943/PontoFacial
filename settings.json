@@ -1,0 +1,41 @@
+{
+    "C_Cpp.default.compilerPath": "C:\\Users\\diogo\\.vscode\\argv.json",
+    "files.autoSave": "afterDelay",
+    "window.zoomLevel": 0.01,
+    "workbench.startupEditor": "none",
+    "explorer.compactFolders": false,
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.colorTheme": "Dracula Theme Soft",
+    "code-runner.executorMap": {
+        "python": "clear ; python -u",
+    },
+    "code-runner.runInTerminal": true,
+    "code-runner.ignoreSelection": true,
+    "files.autoSaveWhenNoErrors": true,
+    "C_Cpp.errorSquiggles": "enabled",
+    "debug.onTaskErrors": "showErrors",
+    "security.workspace.trust.untrustedFiles": "open",
+    "cmake.pinnedCommands": [
+        "workbench.action.tasks.configureTaskRunner",
+        "workbench.action.tasks.runTask"
+    ],
+    "[python]": {
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.defaultColorDecorators": "never",
+        "editor.formatOnType": true,
+        "editor.wordBasedSuggestions": "off"
+    },
+    "cmake.options.statusBarVisibility": "visible",
+    "dart.flutterCreateAndroidLanguage": "java",
+    "workbench.editor.empty.hint": "hidden",
+    "editor.wordWrap": "on",
+    "editor.formatOnSave": true,
+    "workbench.tree.indent": 15,
+    "editor.fontSize": 12,
+    "workbench.panel.showLabels": false,
+    "git.enableSmartCommit": true,
+    "python.createEnvironment.trigger": "off",
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "python.defaultInterpreterPath": "C:\\Users\\diogo\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+    "git.autofetch": true
+}
