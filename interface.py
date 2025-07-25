@@ -1,8 +1,3 @@
-import os
-import sys
-os.environ['TK_SCALE'] = '1'
-
-
 import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
