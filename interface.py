@@ -23,7 +23,7 @@ class StrucFrame():
         super().__init__()
 
         self.root = root
-        self.root.title("Simulação de Estruturas")
+        self.root.title("Análise Estrutural - Pórtico")
         self.root.geometry("1200x600+1+1")
         self.root.resizable(True, True)
 
