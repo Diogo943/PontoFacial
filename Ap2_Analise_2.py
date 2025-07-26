@@ -7,28 +7,26 @@ from modulos.geometria import prop_secao as ps
 from modulos.carga_distribuida import carregamento_dist as cd
 
 #Geometria
-b = 0.2
-h = 0.45
-A = b*h #m²
-I = (b*h**3)/12 #m^4
+A = 6e-3 #m²
+I = 180e-6 #m^4
 #Propriedade do elemento
-E = 25e+6 #kPa
+E = 200e+6 #kPa
 
 #Definindo os nós (Já criado na interface)
-n.no(0,3) #1
-n.no(5,3) #2
-n.no(9,0) #3
+n.no(0,6) #1
+n.no(6,6) #2
+n.no(6,0) #3
 
 #Criação dos elementos (Já criado na interface)
 el.elemento(1,2) #Elemento 1
 el.elemento(2,3) #Elemento 2
 
 #Aplicão de apoios (Já criado na interface)
-ap.terc_gen(1)
+ap.prim_gen(1)
 ap.terc_gen(3)
 
 #Cargas aplicadas (Já criado na interface)
-qa.forca_aplicada_no(2,5,-10,0) #n_no,fx,fy,mz
+qa.forca_aplicada_no(2,20,0,0) #n_no,fx,fy,mz
 
 #Cargas distribuídas
 
