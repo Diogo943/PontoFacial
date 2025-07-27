@@ -5,6 +5,8 @@ from tkinter import messagebox, Menu
 from matplotlib.patches import Arc
 from matplotlib.widgets import Cursor
 from matplotlib.ticker import MultipleLocator
+from numpy.ma.core import nonzero
+from numpy.testing.print_coercion_tables import print_new_cast_table
 
 #Módulos criados para analise estrutural
 from modulos.no import No as no
@@ -16,15 +18,13 @@ from modulos.propriedade_elemento import PropriedadeElemento as prop_elem
 from modulos.geometria import PropriedadeSecao as prop_secao
 
 
-
-
 class StrucFrame():
     def __init__(self, root):
         super().__init__()
 
         self.root = root
         self.root.title("Análise Estrutural - Pórtico")
-        self.root.geometry("1200x600+1+1")
+        self.root.geometry("1350x700+1+1")
         self.root.resizable(True, True)
 
 
@@ -33,9 +33,8 @@ class StrucFrame():
         self.posi = None
         self.posf = None
         self.linha_temporaria = None
-        self.linhas = {}
+        self.elementos = {}
         self.pos = None
-        self.pontos = None
         self.grid_ativado = False
         self.snap_ativado = False
         self.elemento_ativado = False
@@ -48,8 +47,10 @@ class StrucFrame():
         self.localizador_mult_y = 1
         self.coord_x = None
         self.coord_y = None
-        self.limExIn = -10
-        self.limExFi = 10
+        self.limExIn = -2
+        self.limExFi = 20
+        self.limEyIn = -2
+        self.limEyFi = 10
         self.janela_ajuste_grid = None
         self.janela_prop_elemento = None
         self.janela_prop_secao = None
@@ -89,13 +90,21 @@ class StrucFrame():
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.root)
         self.canvas.get_tk_widget().place(x=0, y=0, relwidth=1, relheight=0.96)
 
-        self.fig.subplots_adjust(left=0.03, right=0.98, bottom=0.04, top=0.98)
+        self.fig.subplots_adjust(left=.04, right=.98, bottom=.04, top=.98)
         self.ax.set_xlim(self.limExIn, self.limExFi)
-        self.ax.set_ylim(self.limExIn, self.limExFi)
+        self.ax.set_ylim(self.limEyIn, self.limEyFi)
+        #self.ax.spines['top'].set_visible(False)
+        #self.ax.spines['right'].set_visible(False)
+        self.ax.axhline(y = 0, color = 'b', linewidth = .8)
+        self.ax.axvline(x = 0, color = 'b', linewidth = .8)
+        #self.ax.spines['left'].set_position('zero')
+        #self.ax.spines['bottom'].set_position('zero')
+        self.ax.set_aspect('auto')
 
-        # Força os ticks a aparecerem em todas as unidades inteiras
+        # Forçar os ticks a aparecerem em todas as unidades inteiras
         self.set_major_locator_x = self.ax.xaxis.set_major_locator(MultipleLocator(self.localizador_mult_x))
         self.set_major_locator_y = self.ax.yaxis.set_major_locator(MultipleLocator(self.localizador_mult_y))
+
   
 
     def widget(self):
@@ -157,18 +166,22 @@ class StrucFrame():
         self.root.config(menu=self.menu)
 
         #Adicionar barra inferir
-        self.barra_inferior = ctk.CTkFrame(self.root, fg_color='blue', bg_color='white')
+        self.barra_inferior = ctk.CTkFrame(self.root, fg_color='darkblue', bg_color='white')
         self.barra_inferior.place(relx=0, rely=0.96, relwidth=1, relheight=0.05)
 
         #Exibir coordenadas e tamanho
         self.lb_coordenadas = ctk.CTkLabel(self.barra_inferior, text= f'Coordenadas: (0.00 , 0.00)',
                                             font=('Arial', 12))
-        self.lb_coordenadas.place(relx=0.02, rely=0.00001)
+        self.lb_coordenadas.place(relx=0.02, rely=.00001)
 
         #ajuste de grid
         self.bt_grid_ajuste = ctk.CTkButton(self.barra_inferior,text = 'Ajuste grid', 
-                                            command= self.ajuste_grid, anchor= 'center', state='disabled', font=('Arial', 12), text_color='white', text_color_disabled= 'blue')
-        self.bt_grid_ajuste.place(relx = 0.6, rely = 0.1, relheight = 0.7)
+                                            command= self.ajuste_grid, anchor= 'center', state='disabled',
+                                            font=('Arial', 12), text_color='white', text_color_disabled= '#000000')
+        self.bt_grid_ajuste.place(relx = .6, rely = .07, relheight = .7)
+
+        #self.barra_propriedade = ctk.CTkFrame(self.root, fg_color='darkblue')
+        #self.barra_propriedade.place(relx=.605, rely=.01, relwidth=.38, relheight=.95)
     
         
         #clicar na tecla D para desenhar elementos
@@ -196,13 +209,17 @@ class StrucFrame():
     
     def zoom(self, event):
 
-        escala_base = 0.9
+        escala_base = .95
 
         xlim_atual = self.ax.get_xlim()
         ylim_atual = self.ax.get_ylim()
 
+        print(xlim_atual, ylim_atual)
+
         xdata = event.xdata
         ydata = event.ydata
+
+        print(xdata, ydata)
 
         fator_escala = escala_base if event.button == 'up' else 1 / escala_base
 
@@ -313,10 +330,6 @@ class StrucFrame():
             self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
             self.fig.canvas.mpl_disconnect(self.inserir)
             self.fig.canvas.mpl_disconnect(self.movimento)
-            try:
-                self.cursor.disconnect_events()
-            except:
-                pass
 
     def snap_to_grid(self, x, y ):
 
@@ -389,14 +402,6 @@ class StrucFrame():
 
     def inserir_elemento(self, event):
 
-        self.cursor = Cursor(self.ax, useblit=True, color='red', linewidth=0.5, linestyle='--')
-        
-        if event.button == 1:
-            self.cursor.active = True
-        else:
-            self.cursor.active = False
-            return
-
         if event.xdata is None or event.ydata is None:
             return
         
@@ -435,16 +440,15 @@ class StrucFrame():
 
             self.ax.text(x1,y1, f'{self.posi}', fontsize=10, color='g')
             self.ax.text(x2,y2, f'{self.posf}', fontsize=10, color='g')
-            
+
             linha, = self.ax.plot([x1, x2], [y1, y2], 'ro-', linewidth=1, markersize=1.5, markerfacecolor='blue', picker=True)
 
-            self.ax.scatter(x1, y1, color='r', marker='o',s=10, picker=True)
-            self.ax.scatter(x2, y2, color='r', marker='o',s=10, picker=True)
+            ponto_i = self.ax.scatter(x1, y1, color='r', marker='o',s=10, picker=True)
+            ponto_f = self.ax.scatter(x2, y2, color='r', marker='o',s=10, picker=True)
 
-            
             self.lb_coordenadas.configure(text=f'Coordenadas: ({x:.2f} , {y:.2f})          Tamanho: {self.elem.Lelem[self.elem.n_elem]:.2f}')
-            
-            self.linhas[self.elem.n_elem] = linha
+
+            self.elementos[self.elem.n_elem] = linha
             self.ponto_inicial = None
             #self.lb_coordenadas.configure(text=f'Coordenadas: (0.00 , 0.0)          Tamanho: 0.00')
     
@@ -517,110 +521,106 @@ class StrucFrame():
             self.tipo_apoio = None
 
     def capturar_ponto_forca(self, event):
+
         if event.xdata is None or event.ydata is None:
             return
-        
-        x, y = event.xdata, event.ydata   
+
+        x, y = event.xdata, event.ydata
 
         if self.snap_ativado:
             x, y = self.snap_to_grid(x, y)
-        
-        if [x,y] in self.no.CoordNo:
-            self.pos_forca = self.no.CoordNo.index([x,y]) + 1
-        
-        else:
-            messagebox.showerror("Erro", "Não foi possível inserir a forca. O ponto selecionado não pertence a um nó.")
+
+        if [x, y] not in self.no.CoordNo:
+            messagebox.showerror("Erro",
+                                     "Não foi possível inserir a forca. O ponto selecionado não pertence a um nó.")
             self.inserir_info_no.remove()
             self.canvas.draw()
             self.fig.canvas.mpl_disconnect(self.adicionar_forca)
 
-
+        else:
+            self.pos_forca = self.no.CoordNo.index([x, y]) + 1
         
-        self.adicionar_forca_no = ctk.CTkToplevel(self.root)
-        self.adicionar_forca_no.title("Forca")
-        self.adicionar_forca_no.geometry("250x300+1+1")
-        self.adicionar_forca_no.resizable(False, False)
-        self.adicionar_forca_no.grab_set()
-        self.adicionar_forca_no.focus_set()
+            self.adicionar_forca_no = ctk.CTkFrame(self.root, width= 250, height=674) #Corrigir aqui
+            self.adicionar_forca_no.place(relx=.82, rely=0)
 
-        self.label_Fx = ctk.CTkLabel(self.adicionar_forca_no, text="Fx:")
-        self.label_Fx.place(relx=0.1, rely=0.1, anchor='w')
+            self.label_Fx = ctk.CTkLabel(self.adicionar_forca_no, text="Fx:")
+            self.label_Fx.place(relx=0.1, rely=0.1, anchor='w')
 
-        self.entry_Fx = ctk.CTkEntry(self.adicionar_forca_no)
-        self.entry_Fx.place(relx=0.3, rely=0.1, anchor='w')
+            self.entry_Fx = ctk.CTkEntry(self.adicionar_forca_no)
+            self.entry_Fx.place(relx=0.3, rely=0.1, anchor='w')
 
-        self.label_Fy = ctk.CTkLabel(self.adicionar_forca_no, text="Fy:")
-        self.label_Fy.place(relx=0.1, rely=0.2, anchor='w')
+            self.label_Fy = ctk.CTkLabel(self.adicionar_forca_no, text="Fy:")
+            self.label_Fy.place(relx=0.1, rely=0.2, anchor='w')
         
-        self.entry_Fy = ctk.CTkEntry(self.adicionar_forca_no)
-        self.entry_Fy.place(relx=0.3, rely=0.2, anchor='w')
+            self.entry_Fy = ctk.CTkEntry(self.adicionar_forca_no)
+            self.entry_Fy.place(relx=0.3, rely=0.2, anchor='w')
 
-        self.label_M = ctk.CTkLabel(self.adicionar_forca_no, text="M:")
-        self.label_M.place(relx=0.1, rely=0.3, anchor='w')
+            self.label_M = ctk.CTkLabel(self.adicionar_forca_no, text="M:")
+            self.label_M.place(relx=0.1, rely=0.3, anchor='w')
         
-        self.entry_M = ctk.CTkEntry(self.adicionar_forca_no)
-        self.entry_M.place(relx=0.3, rely=0.3, anchor='w')
+            self.entry_M = ctk.CTkEntry(self.adicionar_forca_no)
+            self.entry_M.place(relx=0.3, rely=0.3, anchor='w')
 
-        def set_forcas_aplicadas():
+            def set_forcas_aplicadas():
 
-            Fx = float(self.entry_Fx.get()) if self.entry_Fx.get() != '' else 0.0
-            Fy = float(self.entry_Fy.get()) if self.entry_Fy.get() != '' else 0.0
-            M = float(self.entry_M.get()) if self.entry_M.get() != '' else 0.0
+                Fx = float(self.entry_Fx.get()) if self.entry_Fx.get() != '' else 0.0
+                Fy = float(self.entry_Fy.get()) if self.entry_Fy.get() != '' else 0.0
+                M = float(self.entry_M.get()) if self.entry_M.get() != '' else 0.0
 
 
-            self.carga_aplicada.forca_aplicada_no(self.pos_forca, Fx, Fy, M)
-            distancia = self.localizador_mult_x
-            raio = distancia
-            #Criar um circulo em torno do ponto
-            momento = Arc((x, y), raio, raio, angle=0, theta1=0, theta2=180, color='black', linewidth=1)
+                self.carga_aplicada.forca_aplicada_no(self.pos_forca, Fx, Fy, M)
+                distancia = self.localizador_mult_x
+                raio = distancia
+                #Criar um circulo em torno do ponto
+                momento = Arc((x, y), raio, raio, angle=0, theta1=0, theta2=180, color='black', linewidth=1)
             
-            if Fx > 0:
-                self.ax.annotate(f"{Fx}kN", xytext=(x - distancia , y), xy=(x, y))
-                self.ax.annotate("", xytext=(x - distancia, y), xy=(x , y),arrowprops=dict(arrowstyle="->"))
+                if Fx > 0:
+                    self.ax.annotate(f"{Fx}kN", xytext=(x - distancia , y), xy=(x, y))
+                    self.ax.annotate("", xytext=(x - distancia, y), xy=(x , y),arrowprops=dict(arrowstyle="->"))
             
-            if Fy > 0:
-                self.ax.annotate(f"{Fy}kN", xytext=(x, y - distancia), xy=(x , y))
-                self.ax.annotate("", xytext=(x, y - distancia), xy=(x , y),arrowprops=dict(arrowstyle="->"))
+                if Fy > 0:
+                    self.ax.annotate(f"{Fy}kN", xytext=(x, y - distancia), xy=(x , y))
+                    self.ax.annotate("", xytext=(x, y - distancia), xy=(x , y),arrowprops=dict(arrowstyle="->"))
 
-            if M > 0:
+                if M > 0:
                 
-                self.ax.add_patch(momento)
-                self.ax.annotate("", xytext=(x - raio / 2, y ), xy=(x - raio / 2 , y - raio/4),arrowprops=dict(arrowstyle="->"))
-                self.ax.annotate(f"{M}kNm", xytext=(x , y + raio/2), xy=(x , y))
+                    self.ax.add_patch(momento)
+                    self.ax.annotate("", xytext=(x - raio / 2, y ), xy=(x - raio / 2 , y - raio/4),arrowprops=dict(arrowstyle="->"))
+                    self.ax.annotate(f"{M}kNm", xytext=(x , y + raio/2), xy=(x , y))
     
-            if Fx < 0:
-                self.ax.annotate(f"{-Fx}kN", xytext=(x + distancia , y), xy=(x, y))
-                self.ax.annotate("", xytext=(x + distancia, y), xy=(x , y),arrowprops=dict(arrowstyle="->"))
+                if Fx < 0:
+                    self.ax.annotate(f"{-Fx}kN", xytext=(x + distancia , y), xy=(x, y))
+                    self.ax.annotate("", xytext=(x + distancia, y), xy=(x , y),arrowprops=dict(arrowstyle="->"))
             
-            if Fy < 0:
-                self.ax.annotate(f"{-Fy}kN", xytext=(x, y + distancia), xy=(x , y))
-                self.ax.annotate("", xytext=(x, y + distancia), xy=(x , y),arrowprops=dict(arrowstyle="->"))
+                if Fy < 0:
+                    self.ax.annotate(f"{-Fy}kN", xytext=(x, y + distancia), xy=(x , y))
+                    self.ax.annotate("", xytext=(x, y + distancia), xy=(x , y),arrowprops=dict(arrowstyle="->"))
 
-            if M < 0:
+                if M < 0:
                 
-                self.ax.add_patch(momento)
-                self.ax.annotate("", xytext=(x + raio / 2, y ), xy=(x + raio / 2 , y - raio/4),arrowprops=dict(arrowstyle="->"))
-                self.ax.annotate(f"{-M}kNm", xytext=(x , y + raio/2), xy=(x , y))
+                    self.ax.add_patch(momento)
+                    self.ax.annotate("", xytext=(x + raio / 2, y ), xy=(x + raio / 2 , y - raio/4),arrowprops=dict(arrowstyle="->"))
+                    self.ax.annotate(f"{-M}kNm", xytext=(x , y + raio/2), xy=(x , y))
             
 
-            self.inserir_info_no.remove()
-            self.canvas.draw()
+                self.inserir_info_no.remove()
+                self.canvas.draw()
             
-            self.adicionar_forca_no.destroy()
+                self.adicionar_forca_no.destroy()
 
-        self.botao_confirmar = ctk.CTkButton(self.adicionar_forca_no, text="Confirmar", command= set_forcas_aplicadas)
-        self.botao_confirmar.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
+            self.botao_confirmar = ctk.CTkButton(self.adicionar_forca_no, text="Confirmar", command= set_forcas_aplicadas)
+            self.botao_confirmar.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
 
-        def cancelar_forcas_aplicadas():
-            self.inserir_info_no.remove()
-            self.canvas.draw()
-            self.adicionar_forca_no.destroy()
+            def cancelar_forcas_aplicadas():
+                self.inserir_info_no.remove()
+                self.canvas.draw()
+                self.adicionar_forca_no.destroy()
 
-        self.botao_cancelar = ctk.CTkButton(self.adicionar_forca_no, text="Cancelar", command= cancelar_forcas_aplicadas)
-        self.botao_cancelar.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
+            self.botao_cancelar = ctk.CTkButton(self.adicionar_forca_no, text="Cancelar", command= cancelar_forcas_aplicadas)
+            self.botao_cancelar.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
         
 
-        self.fig.canvas.mpl_disconnect(self.adicionar_forca)
+            self.fig.canvas.mpl_disconnect(self.adicionar_forca)
         
 
     def aplicar_apoios(self, event): #CORRIGIR OS APOIOS PARA REDIMENSIONAMENTO JUNTO COM O GRID DINÂMICO
@@ -634,7 +634,6 @@ class StrucFrame():
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
                 self.fig.canvas.mpl_disconnect(self.inserir)
                 self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
 
             self.tipo_apoio = 'Fixo'
             self.inserir_apoio = self.fig.canvas.mpl_connect("button_press_event", self.capturar_ponto_apoio)
@@ -645,7 +644,6 @@ class StrucFrame():
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
                 self.fig.canvas.mpl_disconnect(self.inserir)
                 self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
 
             self.tipo_apoio = 'Móvel'
             self.inserir_apoio = self.fig.canvas.mpl_connect("button_press_event", self.capturar_ponto_apoio)
@@ -656,7 +654,6 @@ class StrucFrame():
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
                 self.fig.canvas.mpl_disconnect(self.inserir)
                 self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
                 
             self.tipo_apoio = 'Engaste'
             self.inserir_apoio = self.fig.canvas.mpl_connect("button_press_event", self.capturar_ponto_apoio)
@@ -665,8 +662,8 @@ class StrucFrame():
 
         elemento = event.artist
             
-        if elemento in self.linhas.values():
-            id_elemento = list(self.linhas.values()).index(elemento) + 1
+        if elemento in self.elementos.values():
+            id_elemento = list(self.elementos.values()).index(elemento) + 1
 
             if self.janela_adicionar_forca_distribuida is None or not self.janela_adicionar_forca_distribuida.winfo_exists():
 
@@ -755,7 +752,6 @@ class StrucFrame():
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
                 self.fig.canvas.mpl_disconnect(self.inserir)
                 self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
 
             self.inserir_info_no =self.ax.annotate("Clique no nó para inserir a força", xy=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), xytext=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), color='black', fontsize=10)
             self.canvas.draw()
@@ -906,8 +902,8 @@ class StrucFrame():
     def capturar_elemento_prop_elem(self, event):
         elemento = event.artist
 
-        if elemento in self.linhas.values():
-            id_elemento = list(self.linhas.values()).index(elemento) + 1
+        if elemento in self.elementos.values():
+            id_elemento = list(self.elementos.values()).index(elemento) + 1
 
             if self.janela_prop_elemento is None or not self.janela_prop_elemento.winfo_exists():
 
@@ -995,8 +991,8 @@ class StrucFrame():
     def capturar_elemento_prop_secao(self, event):
         elemento = event.artist
 
-        if elemento in self.linhas.values():
-            id_elemento = list(self.linhas.values()).index(elemento) + 1
+        if elemento in self.elementos.values():
+            id_elemento = list(self.elementos.values()).index(elemento) + 1
 
             if self.janela_prop_secao is None or not self.janela_prop_secao.winfo_exists():
 
@@ -1121,7 +1117,7 @@ class StrucFrame():
         self.posi = None
         self.posf = None
         self.linha_temporaria = None
-        self.linhas = {}
+        self.elementos = {}
         self.pos = None
         self.pontos = None
         self.tipo_apoio = None
@@ -1132,8 +1128,8 @@ class StrucFrame():
         self.localizador_mult_y = 1
         self.coord_x = None
         self.coord_y = None
-        self.limExIn = -10
-        self.limExFi = 10
+        #self.limExIn = -10
+        #self.limExFi = 10
 
         self.no.reseta_no()
         self.elem.resetar_elemento()
@@ -1143,7 +1139,7 @@ class StrucFrame():
         self.prop_secao.resetar_secao_elem()
         self.ax.clear()
         self.ax.set_xlim(self.limExIn, self.limExFi)
-        self.ax.set_ylim(self.limExIn, self.limExFi)
+        self.ax.set_ylim(self.limEyIn, self.limEyFi)
         # Força os ticks a aparecerem em todas as unidades inteiras
         self.set_major_locator_x = self.ax.xaxis.set_major_locator(MultipleLocator(self.localizador_mult_x))
         self.set_major_locator_y = self.ax.yaxis.set_major_locator(MultipleLocator(self.localizador_mult_y))
@@ -1223,6 +1219,10 @@ if __name__ == "__main__":
     try:
         root = ctk.CTk()
         app = StrucFrame(root)
+
+        #Aparência da janela
+        ctk.set_appearance_mode('system')
+
         root.protocol("WM_DELETE_WINDOW", app.fechar_com_seguranca)  # <-- isso é importante
         try:
             root.mainloop()
