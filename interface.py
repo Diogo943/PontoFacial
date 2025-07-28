@@ -21,6 +21,7 @@ class StrucFrame():
     def __init__(self, root):
         super().__init__()
 
+
         self.root = root
         self.root.title("Análise Estrutural - Pórtico")
         self.root.geometry("1350x700+1+1")
@@ -52,8 +53,8 @@ class StrucFrame():
         self.limEyIn = -2
         self.limEyFi = 10
         self.janela_ajuste_grid = None
-        self.janela_prop_elemento = None
-        self.janela_prop_secao = None
+        self.barra_prop = None
+        self.barra_prop = None
         self.janela_prop_apoio = None
         self.janela_adicionar_forca_distribuida = None
         self.adicionar_forca_no = None
@@ -775,59 +776,101 @@ class StrucFrame():
         if self.no.CoordNo == []:
             messagebox.showerror("Erro", "Nenhum elemento foi inserido")
 
-        elif event == 'Concreto':
+        if self.elemento_ativado:
+            self.elemento_ativado = False
+            self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
+            self.fig.canvas.mpl_disconnect(self.inserir)
+            self.fig.canvas.mpl_disconnect(self.movimento)
 
-            if self.elemento_ativado == True:
-                self.elemento_ativado = False
-                self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
-                self.fig.canvas.mpl_disconnect(self.movimento)
+        if self.barra_prop:
+            self.barra_prop.destroy()
 
+        self.selecao_ok()
 
-            self.tipo_elem = 'Concreto'
+        if self.elem.elem:
+            self.resetar_selecao()
 
-            self.inserir_info_elem =self.ax.annotate("Clique no elemento para inserir a propriedade", xy=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), xytext=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), color='black', fontsize=10)
-            self.canvas.draw()
+            self.barra_prop = ctk.CTkFrame(self.root, width=250, height=674)
+            self.barra_prop.place(relx=.82, rely=0)
 
-            self.inserir_prop_elem = self.fig.canvas.mpl_connect("pick_event", self.capturar_elemento_prop_elem)
+            self.label_prop_elem = ctk.CTkLabel(self.barra_prop, text="E:")
+            self.label_prop_elem.place(relx=0.05, rely=.1, anchor='w')
 
-        elif event == 'Aço':
-
-            if self.elemento_ativado == True:
-                self.elemento_ativado = False
-                self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
-                self.fig.canvas.mpl_disconnect(self.movimento)
-            
-            self.tipo_elem = 'Aço'
-
-            self.inserir_info_elem =self.ax.annotate("Clique no elemento para inserir a propriedade",
-                                                     xy=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25),
-                                                     xytext=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), color='black', fontsize=10)
-            self.canvas.draw()
-
-            self.inserir_prop_elem = self.fig.canvas.mpl_connect("pick_event", self.capturar_elemento_prop_elem)
+            self.entry_prop_elem = ctk.CTkEntry(self.barra_prop,
+                                                placeholder_text='Informe o módulo de elasticidade',
+                                                width=200)
+            self.entry_prop_elem.place(relx=.1, rely= .1, anchor='w')
 
 
-        elif event == 'Genérico':
+            def set_prop_elemento():
 
-            if self.elemento_ativado:
-                self.elemento_ativado = False
-                self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
-                self.fig.canvas.mpl_disconnect(self.movimento)
+                try:
 
-            self.tipo_elem = 'Genérico'
+                    id_ = 0
 
-            self.inserir_info_elem =self.ax.annotate("Clique no elemento para inserir a propriedade",
-                                                     xy=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25),
-                                                     xytext=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25),
-                                                     color='black',
-                                                     fontsize=10)
-            self.canvas.draw()
+                    if event == 'Concreto':
 
-            self.inserir_prop_elem = self.fig.canvas.mpl_connect("pick_event", self.capturar_elemento_prop_elem)
-    
+
+                        for id in self.id_elemento:
+                            id_ = id
+                            self.prop_elem.concreto(n_elem=id)
+
+                        if not self.entry_prop_elem.get():
+                            self.entry_prop_elem.insert(0, self.prop_elem.prop_elem[id_])
+
+                            self.label_selecionados.configure(text = 'Propriedade aplicada')
+
+                    elif event == 'Aço':
+
+                        for id in self.id_elemento:
+                            id_ = id
+                            self.prop_elem.aco(n_elem=id)
+
+                        if not self.entry_prop_elem.get():
+                            self.entry_prop_elem.insert(0, self.prop_elem.prop_elem[id_])
+
+                            self.label_selecionados.configure(text='Propriedade aplicada')
+
+                    elif event == 'Genérico':
+
+                        E = float(self.entry_prop_elem.get()) if self.entry_prop_elem.get() != '' else .0
+
+                        for id in self.id_elemento:
+                            self.prop_elem.generico(n_elem = id, E = E)
+
+
+                        self.label_selecionados.configure(text='Propriedade aplicada')
+
+                except:
+                    pass
+
+
+            self.bt_aplicar = ctk.CTkButton(self.barra_prop, text="Aplicar", command=set_prop_elemento)
+            self.bt_aplicar.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
+
+            def cancelar_prop_elemento():
+                #if self.prop_elem.prop_elem:
+                    #self.prop_elem.prop_elem.pop()
+
+                if self.barra_prop:
+                    self.barra_prop.destroy()
+
+            def confirmar_ok():
+                E = self.prop_elem.prop_elem
+
+
+                if self.barra_prop:
+                    self.barra_prop.destroy()
+
+            self.bt_ok = ctk.CTkButton(self.barra_prop, text="Ok",
+                                       command=confirmar_ok, width=3)
+            self.bt_ok.place(relx=0.6, rely=0.85, anchor='e')
+
+            self.bt_cancelar = ctk.CTkButton(self.barra_prop, text="Cancelar",
+                                             command=cancelar_prop_elemento, width=3)
+            self.bt_cancelar.place(relx=0.9, rely=0.85, anchor='e')
+
+
     def aplicar_prop_secao(self, event):
         if self.no.CoordNo == []:
             messagebox.showerror("Erro", "Nenhum elemento foi inserido")
@@ -838,30 +881,27 @@ class StrucFrame():
             self.fig.canvas.mpl_disconnect(self.inserir)
             self.fig.canvas.mpl_disconnect(self.movimento)
 
-            self.canvas.draw()
+        if self.barra_prop:
+            self.barra_prop.destroy()
 
-        if self.janela_prop_secao:
-            self.janela_prop_secao.destroy()
+        self.selecao_ok()
 
         if event == 'Retangular':
+            self.resetar_selecao()
 
-            self.id = self.fig.canvas.mpl_connect("pick_event", self.selecionar_elementos)
+            self.barra_prop = ctk.CTkFrame(self.root, width=250, height=674)
+            self.barra_prop.place(relx=.82, rely=0)
 
-            self.canvas.mpl_connect('button_press_event',self.cancelar_selecao)
-
-            self.janela_prop_secao = ctk.CTkFrame(self.root, width=250, height=674)
-            self.janela_prop_secao.place(relx=.82, rely=0)
-
-            self.label_base = ctk.CTkLabel(self.janela_prop_secao, text="Base:")
+            self.label_base = ctk.CTkLabel(self.barra_prop, text="Base:")
             self.label_base.place(relx=0.1, rely=0.1, anchor='w')
 
-            self.entry_base = ctk.CTkEntry(self.janela_prop_secao)
+            self.entry_base = ctk.CTkEntry(self.barra_prop)
             self.entry_base.place(relx=0.3, rely=0.1, anchor='w')
 
-            self.label_altura = ctk.CTkLabel(self.janela_prop_secao, text="Altura:")
+            self.label_altura = ctk.CTkLabel(self.barra_prop, text="Altura:")
             self.label_altura.place(relx=0.1, rely=0.15, anchor='w')
 
-            self.entry_altura = ctk.CTkEntry(self.janela_prop_secao)
+            self.entry_altura = ctk.CTkEntry(self.barra_prop)
             self.entry_altura.place(relx=0.3, rely=0.15, anchor='w')
 
             def set_prop_secao():
@@ -873,29 +913,25 @@ class StrucFrame():
 
                 print(self.prop_secao.secao_elem)
 
-                if self.janela_prop_secao != None:
-                    self.janela_prop_secao.destroy()
+                if self.barra_prop is not None:
+                    self.barra_prop.destroy()
 
-            self.bt_ok = ctk.CTkButton(self.janela_prop_secao, text="OK", command=set_prop_secao)
+            self.bt_ok = ctk.CTkButton(self.barra_prop, text="OK", command=set_prop_secao)
             self.bt_ok.place(relx=0.5, rely=0.25, anchor=ctk.CENTER)
-            self.bt_cancelar = ctk.CTkButton(self.janela_prop_secao, text="Cancelar",
-                                             command=lambda: self.janela_prop_secao.destroy())
+            self.bt_cancelar = ctk.CTkButton(self.barra_prop, text="Cancelar",
+                                             command=lambda: self.barra_prop.destroy())
             self.bt_cancelar.place(relx=0.5, rely=0.3, anchor=ctk.CENTER)
 
         elif event == 'Circular':
+            self.resetar_selecao()
 
-            self.id = self.fig.canvas.mpl_connect("pick_event", self.selecionar_elementos)
+            self.barra_prop = ctk.CTkFrame(self.root, width=250, height=674)
+            self.barra_prop.place(relx=.82, rely=0)
 
-            self.canvas.mpl_connect('button_press_event', self.cancelar_selecao)
-
-
-            self.janela_prop_secao = ctk.CTkFrame(self.root, width=250, height=674)
-            self.janela_prop_secao.place(relx=.82, rely=0)
-
-            self.label_diametro = ctk.CTkLabel(self.janela_prop_secao, text="Diâmetro:")
+            self.label_diametro = ctk.CTkLabel(self.barra_prop, text="Diâmetro:")
             self.label_diametro.place(relx=0.1, rely=0.1, anchor='w')
 
-            self.entry_diametro = ctk.CTkEntry(self.janela_prop_secao)
+            self.entry_diametro = ctk.CTkEntry(self.barra_prop)
             self.entry_diametro.place(relx=0.35, rely=0.1, anchor='w')
 
             def set_prop_secao():
@@ -904,34 +940,32 @@ class StrucFrame():
                 for id in self.id_elemento:
                     self.prop_secao.circ(diametro, id)
 
-                if self.janela_prop_secao != None:
-                    self.janela_prop_secao.destroy()
+                if self.barra_prop is not None:
+                    self.barra_prop.destroy()
 
-            self.bt_ok = ctk.CTkButton(self.janela_prop_secao, text="OK", command=set_prop_secao)
+            self.bt_ok = ctk.CTkButton(self.barra_prop, text="OK", command=set_prop_secao)
             self.bt_ok.place(relx = .5, rely = .25, anchor = ctk.CENTER)
-            self.bt_cancelar = ctk.CTkButton(self.janela_prop_secao, text = "Cancelar",
-                                             command = lambda: self.janela_prop_secao.destroy())
+            self.bt_cancelar = ctk.CTkButton(self.barra_prop, text = "Cancelar",
+                                             command = lambda: self.barra_prop.destroy())
             self.bt_cancelar.place(relx = .5, rely = .3, anchor=ctk.CENTER)
 
         elif event == 'Genérico':
 
-            self.id = self.fig.canvas.mpl_connect("pick_event", self.selecionar_elementos)
+            self.resetar_selecao()
 
-            self.canvas.mpl_connect('button_press_event', self.cancelar_selecao)
+            self.barra_prop = ctk.CTkFrame(self.root, width=250, height=674)
+            self.barra_prop.place(relx=.82, rely=0)
 
-            self.janela_prop_secao = ctk.CTkFrame(self.root, width=250, height=674)
-            self.janela_prop_secao.place(relx=.82, rely=0)
-
-            self.label_area = ctk.CTkLabel(self.janela_prop_secao, text="Área:")
+            self.label_area = ctk.CTkLabel(self.barra_prop, text="Área:")
             self.label_area.place(relx = .1, rely = .1, anchor='w')
 
-            self.entry_area = ctk.CTkEntry(self.janela_prop_secao)
+            self.entry_area = ctk.CTkEntry(self.barra_prop)
             self.entry_area.place(relx = .3, rely = .1, anchor='w')
 
-            self.label_inercia = ctk.CTkLabel(self.janela_prop_secao, text="Inércia:")
+            self.label_inercia = ctk.CTkLabel(self.barra_prop, text="Inércia:")
             self.label_inercia.place(relx = .1, rely = .15, anchor='w')
 
-            self.entry_inercia = ctk.CTkEntry(self.janela_prop_secao)
+            self.entry_inercia = ctk.CTkEntry(self.barra_prop)
             self.entry_inercia.place(relx = .3, rely = .15, anchor='w')
 
             def set_prop_secao():
@@ -941,96 +975,19 @@ class StrucFrame():
                 for id in self.id_elemento:
                     self.prop_secao.generico(area, inercia, id)
 
-                if self.janela_prop_secao != None:
-                    self.janela_prop_secao.destroy()
+                if self.barra_prop is not None:
+                    self.barra_prop.destroy()
 
-            self.bt_ok = ctk.CTkButton(self.janela_prop_secao, text="OK", command=set_prop_secao)
+            self.bt_ok = ctk.CTkButton(self.barra_prop, text="OK", command=set_prop_secao)
             self.bt_ok.place(relx = .5, rely = .25, anchor=ctk.CENTER)
-            self.bt_cancelar = ctk.CTkButton(self.janela_prop_secao, text="Cancelar",
-                                             command=lambda: self.janela_prop_secao.destroy())
+            self.bt_cancelar = ctk.CTkButton(self.barra_prop, text="Cancelar",
+                                             command=lambda: self.barra_prop.destroy())
             self.bt_cancelar.place(relx = .5, rely = .3, anchor=ctk.CENTER)
 
 
-    def capturar_elemento_prop_elem(self, event):
-        elemento = event.artist
-
-        if elemento in self.elementos.values():
-            id_elemento = list(self.elementos.values()).index(elemento) + 1
-
-            if self.janela_prop_elemento is None or not self.janela_prop_elemento.winfo_exists():
-
-                self.janela_prop_elemento = ctk.CTkFrame(self.root, width=250, height=674)
-                self.janela_prop_elemento.place(relx = .82, rely = 0)
-
-                self.label_prop_elem = ctk.CTkLabel(self.janela_prop_elemento, text="E:")
-                self.label_prop_elem.place(relx=0.1, rely=0.2, anchor='w')
-
-                self.entry_prop_elem = ctk.CTkEntry(self.janela_prop_elemento, placeholder_text= 'Informe o módulo de elasticidade do elemento',
-                                                    width= 200)
-                self.entry_prop_elem.place(relx=0.15, rely=0.2, anchor='w')
-
-
-                if self.tipo_elem == 'Concreto':
-                    self.prop_elem.concreto(n_elem=id_elemento)
-                    self.entry_prop_elem.insert(0, self.prop_elem.prop_elem[id_elemento])
-
-                elif self.tipo_elem == 'Aço':
-                    self.prop_elem.aco(n_elem=id_elemento)
-                    self.entry_prop_elem.insert(0, self.prop_elem.prop_elem[id_elemento])
-
-                def set_prop_elemento():
-                    try:
-
-                        if self.tipo_elem == 'Genérico':
-
-                            E = float(self.entry_prop_elem.get()) if self.entry_prop_elem.get() != '' else 0.0
-                            self.prop_elem.generico(n_elem=id_elemento, E = E)
-                            #self.entry_prop_elem.insert(0, self.prop_elem.prop_elem[id_elemento])
-
-                            self.label_ = ctk.CTkLabel(self.janela_prop_elemento, text = "Propriedade genérica aplicada.")
-                            self.label_.place(relx=0.5, rely=0.45, anchor=ctk.CENTER)
-
-                        E = self.prop_elem.prop_elem
-
-                        self.inserir_info_elem.remove()
-                        self.canvas.draw()
-                    except:
-                        pass
-
-                if self.tipo_elem == 'Genérico':
-
-                    self.bt_aplicar = ctk.CTkButton(self.janela_prop_elemento, text = "Aplicar", command= set_prop_elemento)
-                    self.bt_aplicar.place(relx=0.5, rely=0.65, anchor=ctk.CENTER)
-
-        
-                def cancelar_prop_elemento():
-                    if self.prop_elem.prop_elem == {}:
-                        self.prop_elem.prop_elem.clear()
-
-                    self.inserir_info_elem.remove()
-                    self.canvas.mpl_disconnect(self.inserir_prop_elem)
-                    self.canvas.draw()
-                    
-                    if self.janela_prop_elemento != None and self.janela_prop_elemento.winfo_exists():
-                        self.janela_prop_elemento.destroy()
-
-                def confirmar_ok():
-                    E = self.prop_elem.prop_elem
-                    self.inserir_info_elem.remove()
-                    self.canvas.draw()
-
-                    self.canvas.mpl_disconnect(self.inserir_prop_elem)
-
-                    if self.janela_prop_elemento != None and self.janela_prop_elemento.winfo_exists():
-                        self.janela_prop_elemento.destroy()
-
-                self.bt_ok = ctk.CTkButton(self.janela_prop_elemento, text="Ok",
-                                                 command= confirmar_ok, width=3)
-                self.bt_ok.place(relx=0.6, rely=0.85, anchor='e')
-
-                self.bt_cancelar = ctk.CTkButton(self.janela_prop_elemento, text = "Cancelar",
-                                                 command= cancelar_prop_elemento, width=3)
-                self.bt_cancelar.place(relx=0.9, rely=0.85, anchor='e')
+    def selecao_ok(self):
+        self.id = self.fig.canvas.mpl_connect("pick_event", self.selecionar_elementos)
+        self.canvas.mpl_connect('button_press_event', self.cancelar_selecao)
 
     def selecionar_elementos(self, event):
 
@@ -1042,13 +999,18 @@ class StrucFrame():
             if id not in self.id_elemento:
                 self.id_elemento.append(id)
 
-        self.label_selecionados = ctk.CTkLabel(self.janela_prop_secao,
-                                               text=f"Selecionados: {len(self.id_elemento)}")
-        self.label_selecionados.place(relx=0.5, rely=0.25, anchor=ctk.CENTER)
+        self.label_selecionados = ctk.CTkLabel(self.barra_prop,
+                                               text=f"Selecionados: {len(self.id_elemento)} elemento")
+        self.label_selecionados.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
 
     def cancelar_selecao(self, event):
         if event.button == 3:
             self.fig.canvas.mpl_disconnect(self.id)
+
+    def resetar_selecao(self):
+        if self.id_elemento:
+            self.id_elemento.clear()
+
 
     def resetar_elem(self):
 
