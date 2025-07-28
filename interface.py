@@ -29,6 +29,7 @@ class StrucFrame():
 
 
         #Variáveis de controle
+        self.texto_n_elem = {}
         self.id_elemento = []
         self.ponto_inicial = None
         self.posi = None
@@ -43,7 +44,6 @@ class StrucFrame():
         self.pontos_medios = {}
         self.press = {}
         self.tipo_elem = None
-        self.tipo_secao = None
         self.localizador_mult_x = 1
         self.localizador_mult_y = 1
         self.coord_x = None
@@ -53,7 +53,6 @@ class StrucFrame():
         self.limEyIn = -2
         self.limEyFi = 10
         self.janela_ajuste_grid = None
-        self.barra_prop = None
         self.barra_prop = None
         self.janela_prop_apoio = None
         self.janela_adicionar_forca_distribuida = None
@@ -121,7 +120,16 @@ class StrucFrame():
 
         #Menu View
         self.menu_view = Menu(self.menu, tearoff=0, activebackground='blue', activeforeground='white', bg='white', fg='black', font=('Arial', 10), relief='raised' )
-        #self.menu_view.add_command(label= 'Número do elemento')
+        self.menu.add_cascade(label= 'View', menu = self.menu_view)
+
+        self.menu_n_elem = Menu(self.menu, tearoff=0, activebackground='blue', activeforeground='white', bg='white', fg='black', font=('Arial', 10), relief='raised' )
+        self.menu_n_elem.add_command(label= 'Habilitar', command = self.informar_n_elemento)
+        self.menu_view.add_cascade(label= 'Número do elemento', menu = self.menu_n_elem)
+
+        self.menu_n_no = Menu(self.menu, tearoff = 0, activebackground='blue', activeforeground = 'white', bg = 'white',
+                                fg = 'black', font = ('Arial', 10), relief = 'raised')
+        self.menu_n_no.add_command(label='Habilitar', command = self.informar_n_no)
+        self.menu_view.add_cascade(label='Número do nó', menu = self.menu_n_no)
 
         #Adicionar menu de apoio
         self.menu_apoios = Menu(self.menu, tearoff=0, activebackground='blue', activeforeground='white', bg='white', fg='black', font=('Arial', 10), relief='raised' )
@@ -432,34 +440,25 @@ class StrucFrame():
             else:
                 self.no.no(x2,y2)
                 self.posf = self.no.CoordNo.index([x2,y2]) + 1
-            
-            self.ponto_medio = [(x1 + x2) / 2, (y1 + y2) / 2]
-
-            self.pontos_medios[self.elem.n_elem] = self.ponto_medio
 
             self.elem.elemento(self.posi, self.posf)
-        
-            self.ax.text(self.ponto_medio[0],self.ponto_medio[1], f'{self.elem.n_elem}', fontsize=10, color='b')
-
-            self.ax.text(x1,y1, f'{self.posi}', fontsize=10, color='g')
-            self.ax.text(x2,y2, f'{self.posf}', fontsize=10, color='g')
 
             linha, = self.ax.plot([x1, x2], [y1, y2], 'ro-', linewidth=1, markersize=1.5, markerfacecolor='blue', picker=True)
-
-            ponto_i = self.ax.scatter(x1, y1, color='r', marker='o',s=10, picker=True)
-            ponto_f = self.ax.scatter(x2, y2, color='r', marker='o',s=10, picker=True)
 
             self.lb_coordenadas.configure(text=f'Coordenadas: ({x:.2f} , {y:.2f})          Tamanho: {self.elem.Lelem[self.elem.n_elem]:.2f}')
 
             self.elementos[self.elem.n_elem] = linha
             self.ponto_inicial = None
             #self.lb_coordenadas.configure(text=f'Coordenadas: (0.00 , 0.0)          Tamanho: 0.00')
-    
-            
+
             if self.linha_temporaria:
                 self.linha_temporaria[0].remove()
                 self.linha_temporaria = None
-        
+
+            self.inserir_no()
+
+            if self.texto_n_elem:
+                self.elemento_text()
             
             self.canvas.draw()    
         
@@ -467,6 +466,52 @@ class StrucFrame():
         if self.posi is not None and self.posf is not None: 
             self.posi = None
             self.posf = None
+
+    def inserir_no(self):
+        '''Retorna o ponto inserido'''
+        for pos, coord in self.no.pos.items():
+            ponto_ = self.ax.scatter(coord[0], coord[1], color='r', marker='o', s=10, picker=True)
+
+    def informar_n_no(self):
+        '''Retorna a numeração do ponto, na ordem inserida'''
+        if self.no.CoordNo == []:
+            messagebox.showerror("Erro", "Nenhum elemento foi inserido")
+
+        for pos, coord in self.no.pos.items():
+            self.ax.text(coord[0], coord[1], f'{pos}', fontsize=10, color='g')
+
+        self.canvas.draw()
+
+    def elemento_text(self):
+        for pos, text_info in self.texto_n_elem.items():
+            text_info.remove()
+
+        for n_elem, coord_elem in self.elem.coord_elem.items():
+            ponto_medio = [(coord_elem[0] + coord_elem[1]) / 2, (coord_elem[2] + coord_elem[3]) / 2]
+
+            self.texto_n_elem[n_elem] = self.ax.text(ponto_medio[0], ponto_medio[1], f'{n_elem}', fontsize=10, color='b')
+
+        self.canvas.draw()
+
+    def informar_n_elemento(self):
+        '''Retorna a numeração do elemento, na ordem inserida'''
+        if self.no.CoordNo == []:
+            messagebox.showerror("Erro", "Nenhum elemento foi inserido")
+
+        try:
+            self.menu_n_elem.entryconfig('Habilitar', label = 'Desabilitar')
+            self.elemento_text()
+
+        except:
+            self.menu_n_elem.entryconfig('Desabilitar', label = 'Habilitar')
+            self.texto_n_elem.clear()
+
+            for pos, text_info in self.texto_n_elem.items():
+                text_info.remove()
+
+            self.canvas.draw()
+
+
 
 
     def no_movimento(self, event):
