@@ -3,7 +3,6 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from tkinter import messagebox, Menu
 from matplotlib.patches import Arc
-from matplotlib.widgets import Cursor
 from matplotlib.ticker import MultipleLocator
 from numpy.ma.core import nonzero
 from numpy.testing.print_coercion_tables import print_new_cast_table
@@ -29,6 +28,7 @@ class StrucFrame():
 
 
         #Variáveis de controle
+        self.id_elemento = []
         self.ponto_inicial = None
         self.posi = None
         self.posf = None
@@ -134,20 +134,26 @@ class StrucFrame():
         self.menu_forca.add_command(label='Aplicada', command=lambda: self.aplicar_forcas('Aplicada'))
         self.menu_forca.add_command(label='Distribuída', command=lambda: self.aplicar_forcas('Distribuída'))
         self.menu.add_cascade(label='Força', menu=self.menu_forca)
+
+        # Menu de propriedades
+        self.menu_prop = Menu(self.menu, tearoff=0, activebackground='blue', activeforeground='white', bg='white',
+                              fg='black', font=('Arial', 10), relief='flat')
+        self.menu.add_cascade(label='Propriedades', menu=self.menu_prop)
         
         #Adicionar menu de propriedades do elemento
-        self.menu_prop_elem = Menu(self.menu, tearoff=0, activebackground='blue', activeforeground='white', bg='white', fg='black', font=('Arial', 10), relief='flat')
+        self.menu_prop_elem = Menu(self.menu, tearoff=0, activebackground='blue', activeforeground='white', bg='white',
+                                   fg='black', font=('Arial', 10), relief='flat')
         self.menu_prop_elem.add_command(label='Concreto', command=lambda: self.aplicar_prop_elemento('Concreto'))
         self.menu_prop_elem.add_command(label='Aço', command=lambda: self.aplicar_prop_elemento('Aço'))
         self.menu_prop_elem.add_command(label='Genérico', command=lambda: self.aplicar_prop_elemento('Genérico'))
-        self.menu.add_cascade(label='Prop. do Elemento', menu=self.menu_prop_elem)
+        self.menu_prop.add_cascade(label='Prop. do Material', menu= self.menu_prop_elem)
 
         #Adicionar menu de propriedades da seção
         self.menu_prop_secao = Menu(self.menu, tearoff=0, activebackground='blue', activeforeground='white', bg='white', fg='black', font=('Arial', 10), relief='flat')
         self.menu_prop_secao.add_command(label='Retangular', command=lambda: self.aplicar_prop_secao('Retangular'))
         self.menu_prop_secao.add_command(label='Circular', command=lambda: self.aplicar_prop_secao('Circular'))
         self.menu_prop_secao.add_command(label='Genérico', command= lambda : self.aplicar_prop_secao('Genérico'))
-        self.menu.add_cascade(label='Prop. da Seção', menu=self.menu_prop_secao)
+        self.menu_prop.add_cascade(label='Prop. da Seção', menu=self.menu_prop_secao)
 
         #Adicionar menu snap
         self.menu.add_command(label='Snap: OFF', command=self.snap, state='disabled')
@@ -209,17 +215,13 @@ class StrucFrame():
     
     def zoom(self, event):
 
-        escala_base = .95
+        escala_base = .98
 
         xlim_atual = self.ax.get_xlim()
         ylim_atual = self.ax.get_ylim()
 
-        print(xlim_atual, ylim_atual)
-
         xdata = event.xdata
         ydata = event.ydata
-
-        print(xdata, ydata)
 
         fator_escala = escala_base if event.button == 'up' else 1 / escala_base
 
@@ -532,7 +534,7 @@ class StrucFrame():
 
         if [x, y] not in self.no.CoordNo:
             messagebox.showerror("Erro",
-                                     "Não foi possível inserir a forca. O ponto selecionado não pertence a um nó.")
+                                     "Não foi possível inserir a força. O ponto selecionado não pertence a um nó.")
             self.inserir_info_no.remove()
             self.canvas.draw()
             self.fig.canvas.mpl_disconnect(self.adicionar_forca)
@@ -667,12 +669,8 @@ class StrucFrame():
 
             if self.janela_adicionar_forca_distribuida is None or not self.janela_adicionar_forca_distribuida.winfo_exists():
 
-                self.janela_adicionar_forca_distribuida = ctk.CTkToplevel(self.root)
-                self.janela_adicionar_forca_distribuida.title("Força distribuída")
-                self.janela_adicionar_forca_distribuida.geometry("250x300+1+1")
-                self.janela_adicionar_forca_distribuida.resizable(False, False)
-                self.janela_adicionar_forca_distribuida.grab_set()
-                self.janela_adicionar_forca_distribuida.focus_set()
+                self.janela_adicionar_forca_distribuida = ctk.CTkFrame(self.root, width=250, height=674)
+                self.janela_adicionar_forca_distribuida.place(relx=.82, rely=0)
 
                 self.label_qxi = ctk.CTkLabel(self.janela_adicionar_forca_distribuida, text="Qxi:")
                 self.label_qxi.place(relx=0.1, rely=0.1, anchor='w')
@@ -765,7 +763,6 @@ class StrucFrame():
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
                 self.fig.canvas.mpl_disconnect(self.inserir)
                 self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
 
             
             self.inserir_info_elem =self.ax.annotate("Clique no elemento para inserir a carga distribuida", xy=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), xytext=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), color='black', fontsize=10)
@@ -785,7 +782,7 @@ class StrucFrame():
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
                 self.fig.canvas.mpl_disconnect(self.inserir)
                 self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
+
 
             self.tipo_elem = 'Concreto'
 
@@ -801,7 +798,6 @@ class StrucFrame():
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
                 self.fig.canvas.mpl_disconnect(self.inserir)
                 self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
             
             self.tipo_elem = 'Aço'
 
@@ -820,7 +816,6 @@ class StrucFrame():
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
                 self.fig.canvas.mpl_disconnect(self.inserir)
                 self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
 
             self.tipo_elem = 'Genérico'
 
@@ -837,66 +832,123 @@ class StrucFrame():
         if self.no.CoordNo == []:
             messagebox.showerror("Erro", "Nenhum elemento foi inserido")
 
-        elif event == 'Retangular':
+        if self.elemento_ativado:
+            self.elemento_ativado = False
+            self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
+            self.fig.canvas.mpl_disconnect(self.inserir)
+            self.fig.canvas.mpl_disconnect(self.movimento)
 
-            if self.elemento_ativado:
-                self.elemento_ativado = False
-                self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
-                self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
-
-            self.tipo_secao = 'Retangular'
-
-            self.inserir_info_elem = self.ax.annotate("Clique no elemento para inserir a propriedade da seção",
-                                                      xy = (self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25),
-                                                      xytext = (self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25),
-                                                      color = 'black',
-                                                      fontsize = 10)
             self.canvas.draw()
 
-            self.inserir_prop_secao = self.fig.canvas.mpl_connect("pick_event", self.capturar_elemento_prop_secao)
+        if self.janela_prop_secao:
+            self.janela_prop_secao.destroy()
 
+        if event == 'Retangular':
+
+            self.id = self.fig.canvas.mpl_connect("pick_event", self.selecionar_elementos)
+
+            self.canvas.mpl_connect('button_press_event',self.cancelar_selecao)
+
+            self.janela_prop_secao = ctk.CTkFrame(self.root, width=250, height=674)
+            self.janela_prop_secao.place(relx=.82, rely=0)
+
+            self.label_base = ctk.CTkLabel(self.janela_prop_secao, text="Base:")
+            self.label_base.place(relx=0.1, rely=0.1, anchor='w')
+
+            self.entry_base = ctk.CTkEntry(self.janela_prop_secao)
+            self.entry_base.place(relx=0.3, rely=0.1, anchor='w')
+
+            self.label_altura = ctk.CTkLabel(self.janela_prop_secao, text="Altura:")
+            self.label_altura.place(relx=0.1, rely=0.15, anchor='w')
+
+            self.entry_altura = ctk.CTkEntry(self.janela_prop_secao)
+            self.entry_altura.place(relx=0.3, rely=0.15, anchor='w')
+
+            def set_prop_secao():
+                base = float(self.entry_base.get()) if self.entry_base.get() != '' else 0.0
+                altura = float(self.entry_altura.get()) if self.entry_altura.get() != '' else 0.0
+
+                for id in self.id_elemento:
+                    self.prop_secao.ret(base, altura, id)
+
+                print(self.prop_secao.secao_elem)
+
+                if self.janela_prop_secao != None:
+                    self.janela_prop_secao.destroy()
+
+            self.bt_ok = ctk.CTkButton(self.janela_prop_secao, text="OK", command=set_prop_secao)
+            self.bt_ok.place(relx=0.5, rely=0.25, anchor=ctk.CENTER)
+            self.bt_cancelar = ctk.CTkButton(self.janela_prop_secao, text="Cancelar",
+                                             command=lambda: self.janela_prop_secao.destroy())
+            self.bt_cancelar.place(relx=0.5, rely=0.3, anchor=ctk.CENTER)
 
         elif event == 'Circular':
 
-            if self.elemento_ativado:
-                self.elemento_ativado = False
-                self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
-                self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
+            self.id = self.fig.canvas.mpl_connect("pick_event", self.selecionar_elementos)
 
-            self.tipo_secao = 'Circular'
+            self.canvas.mpl_connect('button_press_event', self.cancelar_selecao)
 
-            self.inserir_info_elem = self.ax.annotate("Clique no elemento para inserir a propriedade da seção",
-                                                      xy = (self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25),
-                                                      xytext = (self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25),
-                                                      color = 'black',
-                                                      fontsize = 10)
-            self.canvas.draw()
 
-            self.inserir_prop_secao = self.fig.canvas.mpl_connect("pick_event", self.capturar_elemento_prop_secao)
+            self.janela_prop_secao = ctk.CTkFrame(self.root, width=250, height=674)
+            self.janela_prop_secao.place(relx=.82, rely=0)
+
+            self.label_diametro = ctk.CTkLabel(self.janela_prop_secao, text="Diâmetro:")
+            self.label_diametro.place(relx=0.1, rely=0.1, anchor='w')
+
+            self.entry_diametro = ctk.CTkEntry(self.janela_prop_secao)
+            self.entry_diametro.place(relx=0.35, rely=0.1, anchor='w')
+
+            def set_prop_secao():
+                diametro = float(self.entry_diametro.get()) if self.entry_diametro.get() != '' else 0.0
+
+                for id in self.id_elemento:
+                    self.prop_secao.circ(diametro, id)
+
+                if self.janela_prop_secao != None:
+                    self.janela_prop_secao.destroy()
+
+            self.bt_ok = ctk.CTkButton(self.janela_prop_secao, text="OK", command=set_prop_secao)
+            self.bt_ok.place(relx = .5, rely = .25, anchor = ctk.CENTER)
+            self.bt_cancelar = ctk.CTkButton(self.janela_prop_secao, text = "Cancelar",
+                                             command = lambda: self.janela_prop_secao.destroy())
+            self.bt_cancelar.place(relx = .5, rely = .3, anchor=ctk.CENTER)
 
         elif event == 'Genérico':
 
-            if self.elemento_ativado:
-                self.elemento_ativado = False
-                self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
-                self.fig.canvas.mpl_disconnect(self.movimento)
-                self.cursor.disconnect_events()
+            self.id = self.fig.canvas.mpl_connect("pick_event", self.selecionar_elementos)
 
-            self.tipo_secao = 'Genérico'
+            self.canvas.mpl_connect('button_press_event', self.cancelar_selecao)
 
-            self.inserir_info_elem = self.ax.annotate("Clique no elemento para inserir a propriedade da seção",
-                                                      xy = (self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25),
-                                                      xytext = (self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25),
-                                                      color = 'black',
-                                                      fontsize = 10)
-            self.canvas.draw()
+            self.janela_prop_secao = ctk.CTkFrame(self.root, width=250, height=674)
+            self.janela_prop_secao.place(relx=.82, rely=0)
 
-            self.inserir_prop_secao = self.fig.canvas.mpl_connect("pick_event", self.capturar_elemento_prop_secao)
+            self.label_area = ctk.CTkLabel(self.janela_prop_secao, text="Área:")
+            self.label_area.place(relx = .1, rely = .1, anchor='w')
+
+            self.entry_area = ctk.CTkEntry(self.janela_prop_secao)
+            self.entry_area.place(relx = .3, rely = .1, anchor='w')
+
+            self.label_inercia = ctk.CTkLabel(self.janela_prop_secao, text="Inércia:")
+            self.label_inercia.place(relx = .1, rely = .15, anchor='w')
+
+            self.entry_inercia = ctk.CTkEntry(self.janela_prop_secao)
+            self.entry_inercia.place(relx = .3, rely = .15, anchor='w')
+
+            def set_prop_secao():
+                area = float(self.entry_area.get()) if self.entry_area.get() != '' else 0.0
+                inercia = float(self.entry_inercia.get()) if self.entry_inercia.get() != '' else 0.0
+
+                for id in self.id_elemento:
+                    self.prop_secao.generico(area, inercia, id)
+
+                if self.janela_prop_secao != None:
+                    self.janela_prop_secao.destroy()
+
+            self.bt_ok = ctk.CTkButton(self.janela_prop_secao, text="OK", command=set_prop_secao)
+            self.bt_ok.place(relx = .5, rely = .25, anchor=ctk.CENTER)
+            self.bt_cancelar = ctk.CTkButton(self.janela_prop_secao, text="Cancelar",
+                                             command=lambda: self.janela_prop_secao.destroy())
+            self.bt_cancelar.place(relx = .5, rely = .3, anchor=ctk.CENTER)
 
 
     def capturar_elemento_prop_elem(self, event):
@@ -907,12 +959,8 @@ class StrucFrame():
 
             if self.janela_prop_elemento is None or not self.janela_prop_elemento.winfo_exists():
 
-                self.janela_prop_elemento = ctk.CTkToplevel(self.root)
-                self.janela_prop_elemento.title("Propriedades do elemento")
-                self.janela_prop_elemento.geometry("250x300+1+1")
-                self.janela_prop_elemento.resizable(False, False)
-                self.janela_prop_elemento.grab_set()
-                self.janela_prop_elemento.focus_set()
+                self.janela_prop_elemento = ctk.CTkFrame(self.root, width=250, height=674)
+                self.janela_prop_elemento.place(relx = .82, rely = 0)
 
                 self.label_prop_elem = ctk.CTkLabel(self.janela_prop_elemento, text="E:")
                 self.label_prop_elem.place(relx=0.1, rely=0.2, anchor='w')
@@ -936,10 +984,10 @@ class StrucFrame():
                         if self.tipo_elem == 'Genérico':
 
                             E = float(self.entry_prop_elem.get()) if self.entry_prop_elem.get() != '' else 0.0
-                            self.prop_elem.generico(n_elem=id_elemento, E=E)
+                            self.prop_elem.generico(n_elem=id_elemento, E = E)
                             #self.entry_prop_elem.insert(0, self.prop_elem.prop_elem[id_elemento])
 
-                            self.label_ = ctk.CTkLabel(self.janela_prop_elemento, text="Propriedade genérica aplicada.")
+                            self.label_ = ctk.CTkLabel(self.janela_prop_elemento, text = "Propriedade genérica aplicada.")
                             self.label_.place(relx=0.5, rely=0.45, anchor=ctk.CENTER)
 
                         E = self.prop_elem.prop_elem
@@ -951,7 +999,7 @@ class StrucFrame():
 
                 if self.tipo_elem == 'Genérico':
 
-                    self.bt_aplicar = ctk.CTkButton(self.janela_prop_elemento, text="Aplicar", command= set_prop_elemento)
+                    self.bt_aplicar = ctk.CTkButton(self.janela_prop_elemento, text = "Aplicar", command= set_prop_elemento)
                     self.bt_aplicar.place(relx=0.5, rely=0.65, anchor=ctk.CENTER)
 
         
@@ -980,135 +1028,27 @@ class StrucFrame():
                                                  command= confirmar_ok, width=3)
                 self.bt_ok.place(relx=0.6, rely=0.85, anchor='e')
 
-                self.bt_cancelar = ctk.CTkButton(self.janela_prop_elemento, text="Cancelar",
+                self.bt_cancelar = ctk.CTkButton(self.janela_prop_elemento, text = "Cancelar",
                                                  command= cancelar_prop_elemento, width=3)
                 self.bt_cancelar.place(relx=0.9, rely=0.85, anchor='e')
 
-            else:
-                self.janela_prop_elemento.grab_set()
-                self.janela_prop_elemento.focus_set()
+    def selecionar_elementos(self, event):
 
-    def capturar_elemento_prop_secao(self, event):
         elemento = event.artist
 
         if elemento in self.elementos.values():
-            id_elemento = list(self.elementos.values()).index(elemento) + 1
+            id = list(self.elementos.values()).index(elemento) + 1
 
-            if self.janela_prop_secao is None or not self.janela_prop_secao.winfo_exists():
+            if id not in self.id_elemento:
+                self.id_elemento.append(id)
 
-                if self.tipo_secao == 'Retangular': #Corrigir isso
+        self.label_selecionados = ctk.CTkLabel(self.janela_prop_secao,
+                                               text=f"Selecionados: {len(self.id_elemento)}")
+        self.label_selecionados.place(relx=0.5, rely=0.25, anchor=ctk.CENTER)
 
-                    self.janela_prop_secao = ctk.CTkToplevel(self.root)
-                    self.janela_prop_secao.title("Propriedades da seção retangular")
-                    self.janela_prop_secao.geometry("250x300+1+1")
-                    self.janela_prop_secao.resizable(False, False)
-                    self.janela_prop_secao.grab_set()
-                    self.janela_prop_secao.focus_set()
-
-                    self.label_base = ctk.CTkLabel(self.janela_prop_secao, text="Base:")
-                    self.label_base.place(relx=0.1, rely=0.1, anchor='w')
-
-                    self.entry_base = ctk.CTkEntry(self.janela_prop_secao)
-                    self.entry_base.place(relx=0.3, rely=0.1, anchor='w')
-
-                    self.label_altura = ctk.CTkLabel(self.janela_prop_secao, text="Altura:")
-                    self.label_altura.place(relx=0.1, rely=0.2, anchor='w')
-
-                    self.entry_altura = ctk.CTkEntry(self.janela_prop_secao)
-                    self.entry_altura.place(relx=0.3, rely=0.2, anchor='w')
-
-
-                    def set_prop_secao():
-                        base = float(self.entry_base.get()) if self.entry_base.get() != '' else 0.0
-                        altura = float(self.entry_altura.get()) if self.entry_altura.get() != '' else 0.0
-
-                        self.prop_secao.ret(base, altura, id_elemento)
-
-                        if self.tipo_secao != None:
-                            self.tipo_secao = None
-
-                        if self.janela_prop_secao != None and self.janela_prop_secao.winfo_exists():
-                            self.janela_prop_secao.destroy()
-
-                    self.bt_ok = ctk.CTkButton(self.janela_prop_secao, text="OK", command=set_prop_secao)
-                    self.bt_ok.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
-                    self.bt_cancelar = ctk.CTkButton(self.janela_prop_secao, text="Cancelar", command= lambda : self.janela_prop_secao.destroy())
-                    self.bt_cancelar.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
-
-                elif self.tipo_secao == 'Circular':
-
-                    self.janela_prop_secao = ctk.CTkToplevel(self.root)
-                    self.janela_prop_secao.title("Propriedades da seção circular")
-                    self.janela_prop_secao.geometry("250x300+1+1")
-                    self.janela_prop_secao.resizable(False, False)
-                    self.janela_prop_secao.grab_set()
-                    self.janela_prop_secao.focus_set()
-
-                    self.label_diametro = ctk.CTkLabel(self.janela_prop_secao, text="Diâmetro:")
-                    self.label_diametro.place(relx=0.1, rely=0.1, anchor='w')
-
-                    self.entry_diametro = ctk.CTkEntry(self.janela_prop_secao)
-                    self.entry_diametro.place(relx=0.35, rely=0.1, anchor='w')
-
-                    def set_prop_secao():
-                        diametro = float(self.entry_diametro.get()) if self.entry_diametro.get() != '' else 0.0
-
-                        self.prop_secao.circ(diametro, id_elemento)
-
-                        if self.tipo_secao != None:
-                            self.tipo_secao = None
-
-                        if self.janela_prop_secao != None and self.janela_prop_secao.winfo_exists():
-                            self.janela_prop_secao.destroy()
-
-                    self.bt_ok = ctk.CTkButton(self.janela_prop_secao, text="OK", command=set_prop_secao)
-                    self.bt_ok.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
-                    self.bt_cancelar = ctk.CTkButton(self.janela_prop_secao, text="Cancelar",
-                                                         command=self.janela_prop_secao.destroy)
-                    self.bt_cancelar.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
-
-                elif self.tipo_secao == 'Genérico':
-
-                    self.janela_prop_secao = ctk.CTkToplevel(self.root)
-                    self.janela_prop_secao.title("Propriedades da seção genérica")
-                    self.janela_prop_secao.geometry("250x300+1+1")
-                    self.janela_prop_secao.resizable(False, False)
-                    self.janela_prop_secao.grab_set()
-                    self.janela_prop_secao.focus_set()
-
-                    self.label_area = ctk.CTkLabel(self.janela_prop_secao, text="Área:")
-                    self.label_area.place(relx=0.1, rely=0.1, anchor='w')
-
-                    self.entry_area = ctk.CTkEntry(self.janela_prop_secao)
-                    self.entry_area.place(relx=0.3, rely=0.1, anchor='w')
-
-                    self.label_inercia = ctk.CTkLabel(self.janela_prop_secao, text="Inércia:")
-                    self.label_inercia.place(relx=0.1, rely=0.2, anchor='w')
-
-                    self.entry_inercia = ctk.CTkEntry(self.janela_prop_secao)
-                    self.entry_inercia.place(relx=0.3, rely=0.2, anchor='w')
-
-                    def set_prop_secao():
-                        area = float(self.entry_area.get()) if self.entry_area.get() != '' else 0.0
-                        inercia = float(self.entry_inercia.get()) if self.entry_inercia.get() != '' else 0.0
-
-                        self.prop_secao.generico(area, inercia, id_elemento)
-
-                        if self.tipo_secao != None:
-                            self.tipo_secao = None
-
-                        if self.janela_prop_secao != None and self.janela_prop_secao.winfo_exists():
-                            self.janela_prop_secao.destroy()
-
-                    self.bt_ok = ctk.CTkButton(self.janela_prop_secao, text="OK", command=set_prop_secao)
-                    self.bt_ok.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
-                    self.bt_cancelar = ctk.CTkButton(self.janela_prop_secao, text="Cancelar",
-                                                     command=self.janela_prop_secao.destroy)
-                    self.bt_cancelar.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
-
-            else:
-                self.janela_prop_secao.grab_set()
-                self.janela_prop_secao.focus_set()
+    def cancelar_selecao(self, event):
+        if event.button == 3:
+            self.fig.canvas.mpl_disconnect(self.id)
 
     def resetar_elem(self):
 
@@ -1140,9 +1080,11 @@ class StrucFrame():
         self.ax.clear()
         self.ax.set_xlim(self.limExIn, self.limExFi)
         self.ax.set_ylim(self.limEyIn, self.limEyFi)
+
         # Força os ticks a aparecerem em todas as unidades inteiras
         self.set_major_locator_x = self.ax.xaxis.set_major_locator(MultipleLocator(self.localizador_mult_x))
         self.set_major_locator_y = self.ax.yaxis.set_major_locator(MultipleLocator(self.localizador_mult_y))
+
         self.ax.grid(self.grid_ativado)
 
 
@@ -1204,7 +1146,12 @@ class StrucFrame():
 
         for i in range(1,self.no.n_no + 1):
             self.no.exibir_deslocamento_no(i)
-        
+
+
+
+    def exibir_num_elemento_no(self):
+        print(123)
+
     def fechar_com_seguranca(self):
         try:
             self.canvas.get_tk_widget().quit()

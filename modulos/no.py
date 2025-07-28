@@ -53,6 +53,8 @@ class No():
                                   'Mz (kNm)': reacao[2] }, index=[f'Nó {n_no}:'] )
         
         print('\n',resultado)
+
+        return resultado
     
     def exibir_deslocamento_no(self, n_no):
         desloca = [0,0,0]
@@ -68,6 +70,8 @@ class No():
                                   'Dz (rad)': desloca[2] }, index=[f'Nó {n_no}:'] )
         
         print('\n',resultado)
+
+        return resultado
 
     def exibir_vetor_forca_global_est(self):
         from pandas import DataFrame as df
