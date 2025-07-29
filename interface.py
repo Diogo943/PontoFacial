@@ -589,9 +589,8 @@ class StrucFrame():
         if self.tipo_apoio is not None:
             self.tipo_apoio = None
 
-    def capturar_ponto_forca(self, event):
-
-        if event.xdata is None or event.ydata is None:
+    def capturar_no(self, event):
+        if event.xdata is None or event.ydata is None: #verificar condição
             return
 
         x, y = event.xdata, event.ydata
@@ -606,8 +605,15 @@ class StrucFrame():
             self.canvas.draw()
             self.fig.canvas.mpl_disconnect(self.adicionar_forca)
 
-        else:
-            self.pos_forca = self.no.CoordNo.index([x, y]) + 1
+        no_forca = self.no.CoordNo.index([x, y]) + 1
+
+        print('agfcjhg')
+
+
+    def capturar_ponto_forca(self):
+
+            self.adicionar_forca = self.canvas.mpl_connect("button_press_event", self.capturar_no) #corrigir
+            print('agfcjhg')
         
             self.adicionar_forca_no = ctk.CTkFrame(self.root, width= 250, height=674)
             self.adicionar_forca_no.place(relx=.82, rely=0)
@@ -637,7 +643,7 @@ class StrucFrame():
                 M = float(self.entry_M.get()) if self.entry_M.get() != '' else 0.0
 
 
-                self.carga_aplicada.forca_aplicada_no(self.pos_forca, Fx, Fy, M)
+                self.carga_aplicada.forca_aplicada_no(pos_forca, Fx, Fy, M)
                 distancia = self.localizador_mult_x
                 raio = distancia
                 #Criar um circulo em torno do ponto
@@ -815,20 +821,22 @@ class StrucFrame():
             if self.elemento_ativado == True:
                 self.elemento_ativado = False
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
+                self.fig.canvas.mpl_disconnect(self.inserir_elem)
                 self.fig.canvas.mpl_disconnect(self.movimento)
 
             self.inserir_info_no =self.ax.annotate("Clique no nó para inserir a força", xy=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), xytext=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), color='black', fontsize=10)
             self.canvas.draw()
+
+            self.capturar_ponto_forca()
             
-            self.adicionar_forca = self.canvas.mpl_connect("button_press_event", self.capturar_ponto_forca)
+
             
         elif event == 'Distribuída':
 
             if self.elemento_ativado == True:
                 self.elemento_ativado = False
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
+                self.fig.canvas.mpl_disconnect(self.inserir_elem)
                 self.fig.canvas.mpl_disconnect(self.movimento)
 
             
@@ -845,7 +853,7 @@ class StrucFrame():
         if self.elemento_ativado:
             self.elemento_ativado = False
             self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-            self.fig.canvas.mpl_disconnect(self.inserir)
+            self.fig.canvas.mpl_disconnect(self.inserir_elem)
             self.fig.canvas.mpl_disconnect(self.movimento)
 
         if self.barra_prop:
@@ -944,7 +952,7 @@ class StrucFrame():
         if self.elemento_ativado:
             self.elemento_ativado = False
             self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-            self.fig.canvas.mpl_disconnect(self.inserir)
+            self.fig.canvas.mpl_disconnect(self.inserir_elem)
             self.fig.canvas.mpl_disconnect(self.movimento)
 
         if self.barra_prop:
