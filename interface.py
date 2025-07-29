@@ -21,7 +21,6 @@ class StrucFrame():
     def __init__(self, root):
         super().__init__()
 
-
         self.root = root
         self.root.title("Análise Estrutural - Pórtico")
         self.root.geometry("1350x700+1+1")
@@ -30,6 +29,7 @@ class StrucFrame():
 
         #Variáveis de controle
         self.texto_n_elem = {}
+        self.texto_n_no = {}
         self.id_elemento = []
         self.ponto_inicial = None
         self.posi = None
@@ -332,14 +332,14 @@ class StrucFrame():
             self.elemento_ativado = True
             self.menu.entryconfig('Elemento: OFF', label='Elemento: ON')
             #Conectando eventos de clique e movimento do mouse no gráfico
-            self.inserir = self.fig.canvas.mpl_connect("button_press_event", self.inserir_elemento)
+            self.inserir_elem = self.fig.canvas.mpl_connect("button_press_event", self.inserir_elemento)
             self.movimento = self.fig.canvas.mpl_connect("motion_notify_event", self.no_movimento)
 
         else:
             
             self.elemento_ativado = False
             self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-            self.fig.canvas.mpl_disconnect(self.inserir)
+            self.fig.canvas.mpl_disconnect(self.inserir_elem)
             self.fig.canvas.mpl_disconnect(self.movimento)
 
     def snap_to_grid(self, x, y ):
@@ -459,6 +459,9 @@ class StrucFrame():
 
             if self.texto_n_elem:
                 self.elemento_text()
+
+            if self.texto_n_no:
+                self.no_text()
             
             self.canvas.draw()    
         
@@ -472,15 +475,34 @@ class StrucFrame():
         for pos, coord in self.no.pos.items():
             ponto_ = self.ax.scatter(coord[0], coord[1], color='r', marker='o', s=10, picker=True)
 
-    def informar_n_no(self):
-        '''Retorna a numeração do ponto, na ordem inserida'''
-        if self.no.CoordNo == []:
-            messagebox.showerror("Erro", "Nenhum elemento foi inserido")
+    def no_text(self):
+        for pos, text_info in self.texto_n_no.items():
+            text_info.remove()
 
         for pos, coord in self.no.pos.items():
-            self.ax.text(coord[0], coord[1], f'{pos}', fontsize=10, color='g')
+            self.texto_n_no[pos] = self.ax.text(coord[0], coord[1], f'{pos}', fontsize = 10, color = 'g')
 
         self.canvas.draw()
+
+    def informar_n_no(self):
+        '''Retorna a numeração do ponto, na ordem inserida'''
+
+        if self.no.CoordNo is []:
+            messagebox.showerror("Erro", "Nenhum elemento foi inserido")
+
+        try:
+            self.menu_n_no.entryconfig('Habilitar', label = 'Desabilitar')
+            self.no_text()
+
+        except:
+            self.menu_n_no.entryconfig('Desabilitar', label = 'Habilitar')
+
+            for pos, text_info in self.texto_n_no.items():
+                text_info.remove()
+
+            self.texto_n_no.clear()
+
+            self.canvas.draw()
 
     def elemento_text(self):
         for pos, text_info in self.texto_n_elem.items():
@@ -504,15 +526,13 @@ class StrucFrame():
 
         except:
             self.menu_n_elem.entryconfig('Desabilitar', label = 'Habilitar')
-            self.texto_n_elem.clear()
 
             for pos, text_info in self.texto_n_elem.items():
                 text_info.remove()
 
+            self.texto_n_elem.clear()
+
             self.canvas.draw()
-
-
-
 
     def no_movimento(self, event):
         if self.ponto_inicial is not None and event.xdata is not None and event.ydata is not None:
@@ -542,7 +562,8 @@ class StrucFrame():
 
         else:
             messagebox.showerror("Erro", "Não foi possível inserir o apoio. O ponto selecionado não pertence a um nó.")
-            self.fig.canvas.mpl_disconnect(self.inserir) #trocar o nome 
+            self.fig.canvas.mpl_disconnect(self.inserir_elem)
+            self.fig.canvas.mpl_disconnect(self.inserir_apoio)
             return
 
         if self.tipo_apoio == 'Fixo':
@@ -588,7 +609,7 @@ class StrucFrame():
         else:
             self.pos_forca = self.no.CoordNo.index([x, y]) + 1
         
-            self.adicionar_forca_no = ctk.CTkFrame(self.root, width= 250, height=674) #Corrigir aqui
+            self.adicionar_forca_no = ctk.CTkFrame(self.root, width= 250, height=674)
             self.adicionar_forca_no.place(relx=.82, rely=0)
 
             self.label_Fx = ctk.CTkLabel(self.adicionar_forca_no, text="Fx:")
@@ -674,13 +695,13 @@ class StrucFrame():
     def aplicar_apoios(self, event): #CORRIGIR OS APOIOS PARA REDIMENSIONAMENTO JUNTO COM O GRID DINÂMICO
     
         if self.no.CoordNo == []:
-            messagebox.showerror("Erro", "Nenhum nó foi inserido")
+            messagebox.showerror("Erro", "Nenhum elemento foi encontrado.")
 
         elif event == 'Fixo':
             if self.elemento_ativado:
                 self.elemento_ativado = False
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
+                self.fig.canvas.mpl_disconnect(self.inserir_elem)
                 self.fig.canvas.mpl_disconnect(self.movimento)
 
             self.tipo_apoio = 'Fixo'
@@ -690,7 +711,7 @@ class StrucFrame():
             if self.elemento_ativado:
                 self.elemento_ativado = False
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
+                self.fig.canvas.mpl_disconnect(self.inserir_elem)
                 self.fig.canvas.mpl_disconnect(self.movimento)
 
             self.tipo_apoio = 'Móvel'
@@ -700,7 +721,7 @@ class StrucFrame():
             if self.elemento_ativado :
                 self.elemento_ativado = False
                 self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir)
+                self.fig.canvas.mpl_disconnect(self.inserir_elem)
                 self.fig.canvas.mpl_disconnect(self.movimento)
                 
             self.tipo_apoio = 'Engaste'
