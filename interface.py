@@ -31,6 +31,7 @@ class StrucFrame():
         self.texto_n_elem = {}
         self.texto_n_no = {}
         self.id_elemento = []
+        self.id_no = []
         self.ponto_inicial = None
         self.posi = None
         self.posf = None
@@ -605,97 +606,26 @@ class StrucFrame():
             self.canvas.draw()
             self.fig.canvas.mpl_disconnect(self.adicionar_forca)
 
-        no_forca = self.no.CoordNo.index([x, y]) + 1
+        id = self.no.CoordNo.index([x, y]) + 1
 
-        print('agfcjhg')
+        if id not in self.id_no:
+            self.id_no.append(id)
+
+        print(self.id_no)
+
+        self.label_selecionados = ctk.CTkLabel(self.barra_prop,
+                                               text=f"Selecionados: {len(self.id_no)} nó")
+        self.label_selecionados.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
+
+
+    def selecionar_no_ok(self):
+        self.adicionar_forca = self.canvas.mpl_connect("button_press_event", self.capturar_no)
+        self.canvas.mpl_connect('button_press_event', self.cancelar_selecao_nos)
 
 
     def capturar_ponto_forca(self):
 
-            self.adicionar_forca = self.canvas.mpl_connect("button_press_event", self.capturar_no) #corrigir
-            print('agfcjhg')
-        
-            self.adicionar_forca_no = ctk.CTkFrame(self.root, width= 250, height=674)
-            self.adicionar_forca_no.place(relx=.82, rely=0)
-
-            self.label_Fx = ctk.CTkLabel(self.adicionar_forca_no, text="Fx:")
-            self.label_Fx.place(relx=0.1, rely=0.1, anchor='w')
-
-            self.entry_Fx = ctk.CTkEntry(self.adicionar_forca_no)
-            self.entry_Fx.place(relx=0.3, rely=0.1, anchor='w')
-
-            self.label_Fy = ctk.CTkLabel(self.adicionar_forca_no, text="Fy:")
-            self.label_Fy.place(relx=0.1, rely=0.2, anchor='w')
-        
-            self.entry_Fy = ctk.CTkEntry(self.adicionar_forca_no)
-            self.entry_Fy.place(relx=0.3, rely=0.2, anchor='w')
-
-            self.label_M = ctk.CTkLabel(self.adicionar_forca_no, text="M:")
-            self.label_M.place(relx=0.1, rely=0.3, anchor='w')
-        
-            self.entry_M = ctk.CTkEntry(self.adicionar_forca_no)
-            self.entry_M.place(relx=0.3, rely=0.3, anchor='w')
-
-            def set_forcas_aplicadas():
-
-                Fx = float(self.entry_Fx.get()) if self.entry_Fx.get() != '' else 0.0
-                Fy = float(self.entry_Fy.get()) if self.entry_Fy.get() != '' else 0.0
-                M = float(self.entry_M.get()) if self.entry_M.get() != '' else 0.0
-
-
-                self.carga_aplicada.forca_aplicada_no(pos_forca, Fx, Fy, M)
-                distancia = self.localizador_mult_x
-                raio = distancia
-                #Criar um circulo em torno do ponto
-                momento = Arc((x, y), raio, raio, angle=0, theta1=0, theta2=180, color='black', linewidth=1)
-            
-                if Fx > 0:
-                    self.ax.annotate(f"{Fx}kN", xytext=(x - distancia , y), xy=(x, y))
-                    self.ax.annotate("", xytext=(x - distancia, y), xy=(x , y),arrowprops=dict(arrowstyle="->"))
-            
-                if Fy > 0:
-                    self.ax.annotate(f"{Fy}kN", xytext=(x, y - distancia), xy=(x , y))
-                    self.ax.annotate("", xytext=(x, y - distancia), xy=(x , y),arrowprops=dict(arrowstyle="->"))
-
-                if M > 0:
-                
-                    self.ax.add_patch(momento)
-                    self.ax.annotate("", xytext=(x - raio / 2, y ), xy=(x - raio / 2 , y - raio/4),arrowprops=dict(arrowstyle="->"))
-                    self.ax.annotate(f"{M}kNm", xytext=(x , y + raio/2), xy=(x , y))
-    
-                if Fx < 0:
-                    self.ax.annotate(f"{-Fx}kN", xytext=(x + distancia , y), xy=(x, y))
-                    self.ax.annotate("", xytext=(x + distancia, y), xy=(x , y),arrowprops=dict(arrowstyle="->"))
-            
-                if Fy < 0:
-                    self.ax.annotate(f"{-Fy}kN", xytext=(x, y + distancia), xy=(x , y))
-                    self.ax.annotate("", xytext=(x, y + distancia), xy=(x , y),arrowprops=dict(arrowstyle="->"))
-
-                if M < 0:
-                
-                    self.ax.add_patch(momento)
-                    self.ax.annotate("", xytext=(x + raio / 2, y ), xy=(x + raio / 2 , y - raio/4),arrowprops=dict(arrowstyle="->"))
-                    self.ax.annotate(f"{-M}kNm", xytext=(x , y + raio/2), xy=(x , y))
-            
-
-                self.inserir_info_no.remove()
-                self.canvas.draw()
-            
-                self.adicionar_forca_no.destroy()
-
-            self.botao_confirmar = ctk.CTkButton(self.adicionar_forca_no, text="Confirmar", command= set_forcas_aplicadas)
-            self.botao_confirmar.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
-
-            def cancelar_forcas_aplicadas():
-                self.inserir_info_no.remove()
-                self.canvas.draw()
-                self.adicionar_forca_no.destroy()
-
-            self.botao_cancelar = ctk.CTkButton(self.adicionar_forca_no, text="Cancelar", command= cancelar_forcas_aplicadas)
-            self.botao_cancelar.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
-        
-
-            self.fig.canvas.mpl_disconnect(self.adicionar_forca)
+            pass
         
 
     def aplicar_apoios(self, event): #CORRIGIR OS APOIOS PARA REDIMENSIONAMENTO JUNTO COM O GRID DINÂMICO
@@ -816,30 +746,141 @@ class StrucFrame():
         if self.no.CoordNo == []:
             messagebox.showerror("Erro", "Nenhum nó foi inserido")
 
-        elif event == 'Aplicada':
+        if self.elemento_ativado == True:
+            self.elemento_ativado = False
+            self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
+            self.fig.canvas.mpl_disconnect(self.inserir_elem)
+            self.fig.canvas.mpl_disconnect(self.movimento)
 
-            if self.elemento_ativado == True:
-                self.elemento_ativado = False
-                self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir_elem)
-                self.fig.canvas.mpl_disconnect(self.movimento)
+        if self.barra_prop:
+            self.barra_prop.destroy()
+
+        self.selecionar_no_ok()
+
+        if event == 'Aplicada':
+            self.resetar_selecao_no()
 
             self.inserir_info_no =self.ax.annotate("Clique no nó para inserir a força", xy=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), xytext=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), color='black', fontsize=10)
             self.canvas.draw()
 
-            self.capturar_ponto_forca()
+            self.barra_prop = ctk.CTkFrame(self.root, width=250, height=674)
+            self.barra_prop.place(relx=.82, rely=0)
+
+            self.label_Fx = ctk.CTkLabel(self.barra_prop, text="Fx:")
+            self.label_Fx.place(relx=0.1, rely=0.1, anchor='w')
+
+            self.entry_Fx = ctk.CTkEntry(self.barra_prop)
+            self.entry_Fx.place(relx=0.3, rely=0.1, anchor='w')
+
+            self.label_Fy = ctk.CTkLabel(self.barra_prop, text="Fy:")
+            self.label_Fy.place(relx=0.1, rely=0.2, anchor='w')
+
+            self.entry_Fy = ctk.CTkEntry(self.barra_prop)
+            self.entry_Fy.place(relx=0.3, rely=0.2, anchor='w')
+
+            self.label_M = ctk.CTkLabel(self.barra_prop, text="M:")
+            self.label_M.place(relx=0.1, rely=0.3, anchor='w')
+
+            self.entry_M = ctk.CTkEntry(self.barra_prop)
+            self.entry_M.place(relx=0.3, rely=0.3, anchor='w')
+
+            def set_forcas_aplicadas():
+
+                Fx = float(self.entry_Fx.get()) if self.entry_Fx.get() != '' else 0.0
+                Fy = float(self.entry_Fy.get()) if self.entry_Fy.get() != '' else 0.0
+                M = float(self.entry_M.get()) if self.entry_M.get() != '' else 0.0
+
+                for pos_forca in self.id_no:
+                    print(pos_forca)
+                    self.carga_aplicada.forca_aplicada_no(pos_forca, Fx, Fy, M)
+
+                distancia = self.localizador_mult_x
+                raio = distancia
+                # Criar um circulo em torno do ponto
+                for id in self.id_no:
+                    if id in self.no.pos.keys():
+                        coordx, coordy = self.no.pos[id]
+                        momento = Arc((coordx, coordy), raio, raio, angle=0, theta1=0, theta2=180, color='black',
+                                      linewidth=1)
+
+                if Fx > 0:
+                    for id in self.id_no:
+                        if id in self.no.pos.keys():
+                            coordx, coordy = self.no.pos[id]
+                            self.ax.annotate(f"{Fx}kN", xytext=(coordx - distancia, coordy), xy=(coordx, coordy))
+                            self.ax.annotate("", xytext=(coordx - distancia, coordy), xy=(coordx, coordy),
+                                             arrowprops=dict(arrowstyle="->"))
+
+                if Fy > 0:
+                    for id in self.id_no:
+                        if id in self.no.pos.keys():
+                            coordx, coordy = self.no.pos[id]
+                            self.ax.annotate(f"{Fy}kN", xytext=(coordx, coordy - distancia), xy=(coordx, coordy))
+                            self.ax.annotate("", xytext=(coordx, coordy - distancia), xy=(coordx, coordy),
+                                             arrowprops=dict(arrowstyle="->"))
+
+                if M > 0:
+                    for id in self.id_no:
+                        if id in self.no.pos.keys():
+                            coordx, coordy = self.no.pos[id]
+                            print(coordx, coordy)
+
+                            self.ax.add_patch(momento)
+                            self.ax.annotate("", xytext=(coordx - raio / 2, coordy),
+                                             xy=(coordx - raio / 2, coordy - raio / 4),
+                                             arrowprops=dict(arrowstyle="->"))
+                            self.ax.annotate(f"{M}kNm", xytext=(coordx, coordy + raio / 2), xy=(coordx, coordy))
+
+                if Fx < 0:
+                    for id in self.id_no:
+                        if id in self.no.pos.keys():
+                            coordx, coordy = self.no.pos[id]
+                            self.ax.annotate(f"{-Fx}kN", xytext=(coordx + distancia, coordy), xy=(coordx, coordy))
+                            self.ax.annotate("", xytext=(coordx + distancia, coordy), xy=(coordx, coordy),
+                                             arrowprops=dict(arrowstyle="->"))
+
+                if Fy < 0:
+                    for id in self.id_no:
+                        if id in self.no.pos.keys():
+                            coordx, coordy = self.no.pos[id]
+                            self.ax.annotate(f"{-Fy}kN", xytext=(coordx, coordy + distancia), xy=(coordx, coordy))
+                            self.ax.annotate("", xytext=(coordx, coordy + distancia), xy=(coordx, coordy),
+                                             arrowprops=dict(arrowstyle="->"))
+
+                if M < 0:
+                    for id in self.id_no:
+                        if id in self.no.pos.keys():
+                            coordx, coordy = self.no.pos[id]
+                            self.ax.add_patch(momento)
+                            self.ax.annotate("", xytext=(coordx + raio / 2, coordy),
+                                             xy=(coordx + raio / 2, coordy - raio / 4),
+                                             arrowprops=dict(arrowstyle="->"))
+                            self.ax.annotate(f"{-M}kNm", xytext=(coordx, coordy + raio / 2), xy=(coordx, coordy))
+
+                self.inserir_info_no.remove()
+                self.canvas.draw()
+
+                self.fig.canvas.mpl_disconnect(self.selecionar_no_ok)   #corrigir erros de seleção
+
+                if self.barra_prop:
+                    self.barra_prop.destroy()
+
+            self.botao_confirmar = ctk.CTkButton(self.barra_prop, text="Confirmar", command=set_forcas_aplicadas)
+            self.botao_confirmar.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
+
+            def cancelar_forcas_aplicadas():
+                self.inserir_info_no.remove()
+                self.canvas.draw()
+                self.barra_prop.destroy()
+
+            self.botao_cancelar = ctk.CTkButton(self.barra_prop, text="Cancelar", command=cancelar_forcas_aplicadas)
+            self.botao_cancelar.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
+
             
 
             
         elif event == 'Distribuída':
 
-            if self.elemento_ativado == True:
-                self.elemento_ativado = False
-                self.menu.entryconfig('Elemento: ON', label='Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir_elem)
-                self.fig.canvas.mpl_disconnect(self.movimento)
-
-            
             self.inserir_info_elem =self.ax.annotate("Clique no elemento para inserir a carga distribuida", xy=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), xytext=(self.ax.get_xlim()[0], self.ax.get_ylim()[1] - 0.25), color='black', fontsize=10)
             self.canvas.draw()
 
@@ -862,7 +903,7 @@ class StrucFrame():
         self.selecao_ok()
 
         if self.elem.elem:
-            self.resetar_selecao()
+            self.resetar_selecao_elemento()
 
             self.barra_prop = ctk.CTkFrame(self.root, width=250, height=674)
             self.barra_prop.place(relx=.82, rely=0)
@@ -961,7 +1002,7 @@ class StrucFrame():
         self.selecao_ok()
 
         if event == 'Retangular':
-            self.resetar_selecao()
+            self.resetar_selecao_elemento()
 
             self.barra_prop = ctk.CTkFrame(self.root, width=250, height=674)
             self.barra_prop.place(relx=.82, rely=0)
@@ -985,7 +1026,7 @@ class StrucFrame():
                 for id in self.id_elemento:
                     self.prop_secao.ret(base, altura, id)
 
-                print(self.prop_secao.secao_elem)
+                self.fig.canvas.mpl_disconnect(self.selecao_ok)
 
                 if self.barra_prop is not None:
                     self.barra_prop.destroy()
@@ -997,7 +1038,7 @@ class StrucFrame():
             self.bt_cancelar.place(relx=0.5, rely=0.3, anchor=ctk.CENTER)
 
         elif event == 'Circular':
-            self.resetar_selecao()
+            self.resetar_selecao_elemento()
 
             self.barra_prop = ctk.CTkFrame(self.root, width=250, height=674)
             self.barra_prop.place(relx=.82, rely=0)
@@ -1014,6 +1055,8 @@ class StrucFrame():
                 for id in self.id_elemento:
                     self.prop_secao.circ(diametro, id)
 
+                self.fig.canvas.mpl_disconnect(self.selecao_ok)
+
                 if self.barra_prop is not None:
                     self.barra_prop.destroy()
 
@@ -1025,7 +1068,7 @@ class StrucFrame():
 
         elif event == 'Genérico':
 
-            self.resetar_selecao()
+            self.resetar_selecao_elemento()
 
             self.barra_prop = ctk.CTkFrame(self.root, width=250, height=674)
             self.barra_prop.place(relx=.82, rely=0)
@@ -1049,6 +1092,8 @@ class StrucFrame():
                 for id in self.id_elemento:
                     self.prop_secao.generico(area, inercia, id)
 
+                self.fig.canvas.mpl_disconnect(self.selecao_ok)
+
                 if self.barra_prop is not None:
                     self.barra_prop.destroy()
 
@@ -1061,7 +1106,7 @@ class StrucFrame():
 
     def selecao_ok(self):
         self.id = self.fig.canvas.mpl_connect("pick_event", self.selecionar_elementos)
-        self.canvas.mpl_connect('button_press_event', self.cancelar_selecao)
+        self.canvas.mpl_connect('button_press_event', self.cancelar_selecao_elemento)
 
     def selecionar_elementos(self, event):
 
@@ -1077,13 +1122,21 @@ class StrucFrame():
                                                text=f"Selecionados: {len(self.id_elemento)} elemento")
         self.label_selecionados.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
 
-    def cancelar_selecao(self, event):
+    def cancelar_selecao_elemento(self, event):
         if event.button == 3:
             self.fig.canvas.mpl_disconnect(self.id)
 
-    def resetar_selecao(self):
+    def cancelar_selecao_nos(self, event):
+        if event.button == 3:
+            self.fig.canvas.mpl_disconnect(self.adicionar_forca)
+
+    def resetar_selecao_elemento(self):
         if self.id_elemento:
             self.id_elemento.clear()
+
+    def resetar_selecao_no(self):
+        if self.id_no:
+            self.id_no.clear()
 
 
     def resetar_elem(self):
