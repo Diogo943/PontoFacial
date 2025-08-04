@@ -1156,7 +1156,10 @@ class StructFrame():
         
     def desativar_selecao_elemento(self):
         for id, elem in self.selecao_temp.items():
-            print(elem)
+            elem[0].remove()
+
+        self.canvas.draw()
+            
 
 
 
@@ -1178,24 +1181,7 @@ class StructFrame():
 
     def resetar_elem(self):
 
-        #Variáveis de controle
-        self.ponto_inicial  =  None
-        self.posi  =  None
-        self.posf  =  None
-        self.linha_temporaria  =  None
-        self.elementos  =  {}
-        self.pos  =  None
-        self.pontos  =  None
-        self.tipo_apoio  =  None
-        self.pontos_medios  =  {}
-        self.press  =  {}
-        self.tipo_elem  =  None
-        self.localizador_mult_x  =  1
-        self.localizador_mult_y  =  1
-        self.coord_x  =  None
-        self.coord_y  =  None
-        #self.limExIn  =  -10
-        #self.limExFi  =  10
+        self.variaveis_de_controle()
 
         self.no.reseta_no()
         self.elem.resetar_elemento()
@@ -1288,7 +1274,7 @@ class StructFrame():
 if __name__  ==  "__main__":
     try:
         root  =  ctk.CTk()
-        app  =  StrucFrame(root)
+        app  =  StructFrame(root)
 
         #Aparência da janela
         ctk.set_appearance_mode('system')
