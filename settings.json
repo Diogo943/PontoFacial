@@ -7,7 +7,7 @@
     "workbench.iconTheme": "material-icon-theme",
     "workbench.colorTheme": "Dracula Theme Soft",
     "code-runner.executorMap": {
-        "python": "clear ; python -u",
+        "python": "clear ; python -u"
     },
     "code-runner.runInTerminal": true,
     "code-runner.ignoreSelection": true,

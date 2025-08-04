@@ -15,19 +15,27 @@ from modulos.propriedade_elemento import PropriedadeElemento as prop_elem
 from modulos.geometria import PropriedadeSecao as prop_secao
 
 
-class StrucFrame():
+class StructFrame():
     def __init__(self, root):
         super().__init__()
 
 
+        
+        self.configuracao_janela()
+        self.variaveis_de_controle()
+        self.instancias_dos_modulos()
+        self.grafico()
+        self.widget()
+        self.mpl_connect_events()
+
+    def configuracao_janela(self):
         self.root  =  root
         self.root.title("Análise Estrutural - Pórtico")
         self.root.geometry("1350x700+1+1")
         self.root.resizable(True, True)
 
-
-        #Variáveis de controle
-        self.selecao_temp  =  []
+    def variaveis_de_controle(self):
+        self.selecao_temp  =  {}
         self.texto_n_elem  =  {}
         self.texto_n_no  =  {}
         self.id_elemento  =  []
@@ -50,9 +58,9 @@ class StrucFrame():
         self.coord_x  =  None
         self.coord_y  =  None
         self.limExIn  =  -2
-        self.limExFi  =  20
+        self.limExFi  =  40
         self.limEyIn  =  -2
-        self.limEyFi  =  10
+        self.limEyFi  =  20
         self.janela_ajuste_grid  =  None
         self.barra_prop  =  None
         self.janela_prop_apoio  =  None
@@ -60,7 +68,7 @@ class StrucFrame():
         self.adicionar_forca_no  =  None
 
 
-        #Criando instâncias dos módulos
+    def instancias_dos_modulos(self):
         self.no  =  no()
         self.elem  =  elem()
         self.apoio  =  apoio()
@@ -69,11 +77,6 @@ class StrucFrame():
         self.prop_elem  =  prop_elem()
         self.prop_secao  =  prop_secao()
         
-        self.grafico()
-        self.widget()
-        self.mpl_connect_events()
-
- 
     def mpl_connect_events(self):
         
         self.fig.canvas.mpl_connect('motion_notify_event', self.move_mouse)
@@ -614,9 +617,7 @@ class StrucFrame():
         if id not in self.id_no:
             self.id_no.append(id)
 
-        self.label_selecionados  =  ctk.CTkLabel(self.barra_prop,
-                                               text = f"Selecionados: {len(self.id_no)} nó")
-        self.label_selecionados.place(relx =  .5, rely =  .4, anchor = ctk.CENTER)
+        self.label_selecionados.configure(text = f"Selecionados: {len(self.id_no)} nó")
 
     def selecionar_no_ok(self):
         self.adicionar_forca  =  self.canvas.mpl_connect("button_press_event", self.capturar_no)
@@ -1138,21 +1139,25 @@ class StrucFrame():
         if elemento in self.elementos.values():
             id  =  list(self.elementos.values()).index(elemento) + 1
             coordx1, coordx2, coordy1, coordy2  =  self.elem.coord_elem[id]
-            self.selecao_temp  =  self.ax.plot([coordx1, coordx2], [coordy1, coordy2], 'b-', linewidth = 1, markersize = 1.5,
-                                             markerfacecolor = 'blue', picker = True)
-            self.canvas.draw()
+
+            self.selecao_temporaria(id, coordx1, coordx2, coordy1, coordy2)
 
             if id not in self.id_elemento:
                 self.id_elemento.append(id)
 
         self.label_selecionados.configure(text = f'Selecionados: {len(self.id_elemento)} elemento')
 
-    def desativar_selecao_elemento(self):
-        for selecao in self.selecao_temp:
-            selecao.remove()
-            self.canvas.draw()
 
-        self.selecao_temp.clear()
+    def selecao_temporaria(self, id , coordx1, coordx2, coordy1, coordy2):
+        
+        self.selecao_temp[id] = self.ax.plot([coordx1, coordx2], [coordy1, coordy2], 'b-', linewidth = 1, markersize = 1.5, markerfacecolor = 'blue', picker = True)
+
+        self.canvas.draw()
+        
+    def desativar_selecao_elemento(self):
+        for id, elem in self.selecao_temp.items():
+            print(elem)
+
 
 
     def cancelar_selecao_elemento(self, event):
