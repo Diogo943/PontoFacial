@@ -34,6 +34,7 @@ class StructFrame():
         self.root.geometry("1350x700+1+1")
         self.root.resizable(True, True)
 
+
     def variaveis_de_controle(self):
         self.selecao_temp  =  {}
         self.texto_n_elem  =  {}
@@ -76,7 +77,8 @@ class StructFrame():
         self.carga_distribuida  =  carga_distribuida()
         self.prop_elem  =  prop_elem()
         self.prop_secao  =  prop_secao()
-        
+
+
     def mpl_connect_events(self):
         
         self.fig.canvas.mpl_connect('motion_notify_event', self.move_mouse)
@@ -108,7 +110,6 @@ class StructFrame():
         # Forçar os ticks a aparecerem em todas as unidades inteiras
         self.set_major_locator_x  =  self.ax.xaxis.set_major_locator(MultipleLocator(self.localizador_mult_x))
         self.set_major_locator_y  =  self.ax.yaxis.set_major_locator(MultipleLocator(self.localizador_mult_y))
-
   
 
     def widget(self):
@@ -218,6 +219,7 @@ class StructFrame():
         self.root.bind('<g>', self.retorno_grid)
         self.root.bind('<G>', self.retorno_grid)
 
+
     def barra_de_propriedade(self):
         self.barra_prop  =  ctk.CTkFrame(self.root, width = 250, height = 674)
         self.barra_prop.place(relx = .82, rely = 0)
@@ -226,12 +228,14 @@ class StructFrame():
                                                text=f"Selecionados: {len(self.id_elemento)} elemento")
         self.label_selecionados.place(relx=.5, rely=.2, anchor=ctk.CENTER)
 
+
     def move_mouse(self, event):
         x, y  =  event.xdata, event.ydata
         try:
             self.lb_coordenadas.configure(text =  f'Coordenadas: ({x:.2f} , {y:.2f})')
         except:
             pass
+
 
     def zoom(self, event):
 
@@ -255,10 +259,12 @@ class StructFrame():
 
         self.fig.canvas.draw()
 
+
     def on_press(self,event):
         if event.inaxes:
             if event.button  ==  2:
                 self.press['x'], self.press['y']  =  event.xdata, event.ydata
+
 
     def estilo_cursor(self, estilo):
         '''
@@ -288,6 +294,7 @@ class StructFrame():
         
         self.canvas.get_tk_widget().config(cursor  =  estilo)
 
+
     def on_motion(self,event):
         if 'x' in self.press and event.inaxes:
             dx  =  self.press['x'] - event.xdata
@@ -302,6 +309,7 @@ class StructFrame():
 
             self.fig.canvas.draw()
 
+
     def on_release(self,event):
         self.press.clear()
         self.estilo_cursor('arrow')
@@ -314,13 +322,15 @@ class StructFrame():
                 self.ativar_desenho()
             else:
                 self.ativar_desenho()
-    
+
+
     def retorno_grid(self, event):
         if event.keysym  ==  'g' or event.keysym  ==  'G':
             if not self.grid_ativado:
                 self.ativar_grid()
             else:
                 self.desativar_grid()
+
 
     def retorno_snap(self, event):
         if event.keysym  ==  's' or event.keysym  ==  'S':
@@ -332,6 +342,7 @@ class StructFrame():
 
             else:
                 pass
+
 
     def ativar_desenho(self):
         
@@ -348,6 +359,7 @@ class StructFrame():
             self.fig.canvas.mpl_disconnect(self.inserir_elem)
             self.fig.canvas.mpl_disconnect(self.movimento)
 
+
     def snap_to_grid(self, x, y ):
 
         grid_size_x  =  self.localizador_mult_x
@@ -357,21 +369,25 @@ class StructFrame():
         snapped_y  =  round(y / grid_size_y) * grid_size_y
 
         return snapped_x, snapped_y
-    
+
+
     def ativar_snap(self):
         self.menu.entryconfig('Snap: OFF', label = 'Snap: ON')
         self.snap_ativado  =  not self.snap_ativado
-            
+
+
     def desativar_snap(self):
         self.menu.entryconfig('Snap: ON', label = 'Snap: OFF')
         self.snap_ativado  =  not self.snap_ativado
-            
+
+
     def snap(self):
         
         if not self.snap_ativado:
             self.ativar_snap()
         else:
             self.desativar_snap()
+
 
     def ativar_grid(self):
         
@@ -391,6 +407,7 @@ class StructFrame():
     
         self.canvas.draw()
 
+
     def desativar_grid(self):
 
         self.menu.entryconfig('Grid: ON', label = 'Grid: OFF')
@@ -409,13 +426,15 @@ class StructFrame():
         self.bt_grid_ajuste.configure(state = 'disabled')
 
         self.canvas.draw()
-            
+
+
     def grid(self):
         
         if not self.grid_ativado:
             self.ativar_grid()
         else:
             self.desativar_grid()
+
 
     def inserir_elemento(self, event):
 
@@ -478,10 +497,12 @@ class StructFrame():
                 self.posi  =  None
                 self.posf  =  None
 
+
     def inserir_no(self):
         '''Retorna o ponto inserido'''
         for pos, coord in self.no.pos.items():
             ponto_  =  self.ax.scatter(coord[0], coord[1], color = 'r', marker = 'o', s = 10, picker = True)
+
 
     def no_text(self):
         for pos, text_info in self.texto_n_no.items():
@@ -492,25 +513,29 @@ class StructFrame():
 
         self.canvas.draw()
 
+
     def informar_n_no(self):
         '''Retorna a numeração do ponto, na ordem inserida'''
 
-        if self.no.CoordNo is []:
+        if self.no.CoordNo == []:
             messagebox.showerror("Erro", "Nenhum elemento foi inserido")
+        
+        else:
 
-        try:
-            self.menu_n_no.entryconfig('Habilitar', label  =  'Desabilitar')
-            self.no_text()
+            try:
+                self.menu_n_no.entryconfig('Habilitar', label  =  'Desabilitar')
+                self.no_text()
 
-        except:
-            self.menu_n_no.entryconfig('Desabilitar', label  =  'Habilitar')
+            except:
+                self.menu_n_no.entryconfig('Desabilitar', label  =  'Habilitar')
 
-            for pos, text_info in self.texto_n_no.items():
-                text_info.remove()
+                for pos, text_info in self.texto_n_no.items():
+                    text_info.remove()
 
-            self.texto_n_no.clear()
+                self.texto_n_no.clear()
 
-            self.canvas.draw()
+                self.canvas.draw()
+
 
     def elemento_text(self):
         for pos, text_info in self.texto_n_elem.items():
@@ -523,24 +548,28 @@ class StructFrame():
 
         self.canvas.draw()
 
+
     def informar_n_elemento(self):
         '''Retorna a numeração do elemento, na ordem inserida'''
         if self.no.CoordNo  ==  []:
             messagebox.showerror("Erro", "Nenhum elemento foi inserido")
+        
+        else:
 
-        try:
-            self.menu_n_elem.entryconfig('Habilitar', label  =  'Desabilitar')
-            self.elemento_text()
+            try:
+                self.menu_n_elem.entryconfig('Habilitar', label  =  'Desabilitar')
+                self.elemento_text()
 
-        except:
-            self.menu_n_elem.entryconfig('Desabilitar', label  =  'Habilitar')
+            except:
+                self.menu_n_elem.entryconfig('Desabilitar', label  =  'Habilitar')
 
-            for pos, text_info in self.texto_n_elem.items():
-                text_info.remove()
+                for pos, text_info in self.texto_n_elem.items():
+                    text_info.remove()
 
-            self.texto_n_elem.clear()
+                self.texto_n_elem.clear()
 
-            self.canvas.draw()
+                self.canvas.draw()
+
 
     def no_movimento(self, event):
         if self.ponto_inicial is not None and event.xdata is not None and event.ydata is not None:
@@ -554,6 +583,7 @@ class StructFrame():
         
             self.linha_temporaria  =  self.ax.plot([x1, x2], [y1, y2], 'b--')
             self.canvas.draw()
+
 
     def capturar_ponto_apoio(self, event):
         if event.xdata is None or event.ydata is None:
@@ -596,6 +626,7 @@ class StructFrame():
         if self.tipo_apoio is not None:
             self.tipo_apoio  =  None
 
+
     def capturar_no(self, event):
         if event.xdata is None or event.ydata is None: #verificar condição
             return
@@ -619,9 +650,11 @@ class StructFrame():
 
         self.label_selecionados.configure(text = f"Selecionados: {len(self.id_no)} nó")
 
+
     def selecionar_no_ok(self):
         self.adicionar_forca  =  self.canvas.mpl_connect("button_press_event", self.capturar_no)
         self.canvas.mpl_connect('button_press_event', self.cancelar_selecao_nos)
+
 
     def aplicar_apoios(self, event): #CORRIGIR OS APOIOS PARA REDIMENSIONAMENTO JUNTO COM O GRID DINÂMICO
     
@@ -657,6 +690,7 @@ class StructFrame():
                 
             self.tipo_apoio  =  'Engaste'
             self.inserir_apoio  =  self.fig.canvas.mpl_connect("button_press_event", self.capturar_ponto_apoio)
+
 
     def capturar_elemento_cargas(self, event):
 
@@ -749,34 +783,32 @@ class StructFrame():
 
         if self.barra_prop:
             self.barra_prop.destroy()
+        
+        if self.no.CoordNo != []:
+            self.selecionar_no_ok()
 
-        self.selecionar_no_ok()
-
-        if event  ==  'Aplicada':
+        if event  ==  'Aplicada' and self.no.CoordNo != []:
             self.resetar_selecao_no()
-
-            self.inserir_info_no  = self.ax.annotate("Clique no nó para inserir a força", xy = (self.ax.get_xlim()[0], self.ax.get_ylim()[1] -  .25), xytext = (self.ax.get_xlim()[0], self.ax.get_ylim()[1] -  .25), color = 'black', fontsize = 10)
-            self.canvas.draw()
 
             self.barra_de_propriedade()
 
             self.label_Fx  =  ctk.CTkLabel(self.barra_prop, text  =  "Fx:")
-            self.label_Fx.place(relx  =  .1, rely  =  .1, anchor = 'w')
+            self.label_Fx.place(relx  =  .1, rely  =  .05, anchor = 'w')
 
             self.entry_Fx  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_Fx.place(relx  =  .3, rely  =  .1, anchor = 'w')
+            self.entry_Fx.place(relx  =  .5, rely  =  .05, anchor = ctk.CENTER)
 
             self.label_Fy  =  ctk.CTkLabel(self.barra_prop, text = "Fy:")
-            self.label_Fy.place(relx  =  .1, rely  =  .15, anchor = 'w')
+            self.label_Fy.place(relx  =  .1, rely  =  .1, anchor = 'w')
 
             self.entry_Fy  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_Fy.place(relx =  .3, rely =  .2, anchor = 'w')
+            self.entry_Fy.place(relx =  .5, rely =  .1, anchor = ctk.CENTER)
 
             self.label_M  =  ctk.CTkLabel(self.barra_prop, text = "M:")
-            self.label_M.place(relx =  .1, rely =  .3, anchor = 'w')
+            self.label_M.place(relx =  .1, rely =  .15, anchor = 'w')
 
             self.entry_M  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_M.place(relx =  .3, rely =  .3, anchor = 'w')
+            self.entry_M.place(relx =  .5, rely =  .15, anchor = ctk.CENTER)
 
             def set():
 
@@ -785,7 +817,6 @@ class StructFrame():
                 M  =  float(self.entry_M.get()) if self.entry_M.get() !=  '' else  .00
 
                 for pos_forca in self.id_no:
-                    print(pos_forca)
                     self.carga_aplicada.forca_aplicada_no(pos_forca, Fx, Fy, M)
 
                 distancia  =  self.localizador_mult_x
@@ -853,14 +884,13 @@ class StructFrame():
 
             def confirmar():
                 self.fig.canvas.mpl_disconnect(self.adicionar_forca)
+                self.barra_prop.destroy()
 
-                if self.barra_prop:
-                    self.barra_prop.destroy()
 
             def cancelar():
-                self.inserir_info_no.remove()
-                self.canvas.draw()
+                self.fig.canvas.mpl_disconnect(self.adicionar_forca)
                 self.barra_prop.destroy()
+
 
             self.bt_aplicar  =  ctk.CTkButton(self.barra_prop, text  =  "Aplicar", command  =  set, width  =  3)
             self.bt_aplicar.place(relx = .8, rely = .25, anchor  =  ctk.CENTER)
@@ -873,7 +903,7 @@ class StructFrame():
             self.bt_cancelar.place(relx  =  .8, rely  =  .96, anchor  =  ctk.CENTER)
 
 
-        elif event  ==  'Distribuída':
+        elif event  ==  'Distribuída' and self.no.CoordNo != []:
 
             self.inserir_info_elem  = self.ax.annotate("Clique no elemento para inserir a carga distribuida", xy = (self.ax.get_xlim()[0], self.ax.get_ylim()[1] -  .25), xytext = (self.ax.get_xlim()[0], self.ax.get_ylim()[1] -  .25), color = 'black', fontsize = 10)
             self.canvas.draw()
@@ -977,6 +1007,7 @@ class StructFrame():
                                              command  =  cancelar, width  =  3)
             self.bt_cancelar.place(relx  =  .8, rely  =  .96, anchor  =  ctk.CENTER)
 
+
     def aplicar_prop_secao(self, event):
         if self.no.CoordNo  ==  []:
             messagebox.showerror("Erro", "Nenhum elemento foi inserido")
@@ -989,10 +1020,12 @@ class StructFrame():
 
         if self.barra_prop:
             self.barra_prop.destroy()
+        
+
 
         self.selecao_ok()
 
-        if event  ==  'Retangular':
+        if event  ==  'Retangular' and self.no.CoordNo != []:
             self.resetar_selecao_elemento()
 
             self.barra_de_propriedade()
@@ -1037,7 +1070,7 @@ class StructFrame():
                                              command = cancelar, width = 3)
             self.bt_cancelar.place(relx = .8, rely = .96, anchor = ctk.CENTER)
 
-        elif event  ==  'Circular':
+        elif event  ==  'Circular' and self.no.CoordNo != []:
             self.resetar_selecao_elemento()
 
             self.barra_de_propriedade()
@@ -1077,7 +1110,7 @@ class StructFrame():
                                              command = cancelar, width  =  3)
             self.bt_cancelar.place(relx  =  .8, rely  =  .96, anchor  =  ctk.CENTER)
 
-        elif event  ==  'Genérico':
+        elif event  ==  'Genérico' and self.no.CoordNo != []:
 
             self.resetar_selecao_elemento()
 
@@ -1132,6 +1165,7 @@ class StructFrame():
         self.id  =  self.fig.canvas.mpl_connect("pick_event", self.selecionar_elementos)
         self.canvas.mpl_connect('button_press_event', self.cancelar_selecao_elemento)
 
+
     def selecionar_elementos(self, event):
 
         elemento  =  event.artist
@@ -1153,7 +1187,8 @@ class StructFrame():
         self.selecao_temp[id] = self.ax.plot([coordx1, coordx2], [coordy1, coordy2], 'b-', linewidth = 1, markersize = 1.5, markerfacecolor = 'blue', picker = True)
 
         self.canvas.draw()
-        
+
+
     def desativar_selecao_elemento(self):
         for id, elem in self.selecao_temp.items():
             elem[0].remove()
@@ -1161,23 +1196,25 @@ class StructFrame():
         self.canvas.draw()
             
 
-
-
     def cancelar_selecao_elemento(self, event):
         if event.button  ==  3:
             self.fig.canvas.mpl_disconnect(self.id)
+
 
     def cancelar_selecao_nos(self, event):
         if event.button  ==  3:
             self.fig.canvas.mpl_disconnect(self.adicionar_forca)
 
+
     def resetar_selecao_elemento(self):
         if self.id_elemento:
             self.id_elemento.clear()
 
+
     def resetar_selecao_no(self):
         if self.id_no:
             self.id_no.clear()
+
 
     def resetar_elem(self):
 
@@ -1201,6 +1238,7 @@ class StructFrame():
 
 
         self.canvas.draw()
+
 
     def ajuste_grid(self):
 
@@ -1247,6 +1285,7 @@ class StructFrame():
             self.janela_ajuste_grid.grab_set()
             self.janela_ajuste_grid.focus_set()
 
+
     def run(self, event):
         from modulos.matrizrigidez import resultado
     
@@ -1258,8 +1297,10 @@ class StructFrame():
         for i in range(1,self.no.n_no + 1):
             self.no.exibir_deslocamento_no(i)
 
+
     def exibir_num_elemento_no(self):
         print(123)
+
 
     def fechar_com_seguranca(self):
         try:
