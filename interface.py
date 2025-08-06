@@ -35,7 +35,8 @@ class StructFrame():
 
 
     def variaveis_de_controle(self):
-        self.selecao_temp  =  {}
+        self.selecao_temp_elem  =  {}
+        self.selecao_temp_no  =  {}
         self.texto_n_elem  =  {}
         self.texto_n_no  =  {}
         self.id_elemento  =  []
@@ -45,6 +46,7 @@ class StructFrame():
         self.posf  =  None
         self.linha_temporaria  =  None
         self.elementos  =  {}
+        self.nos = {}
         self.pos  =  None
         self.grid_ativado  =  False
         self.snap_ativado  =  False
@@ -1243,7 +1245,7 @@ class StructFrame():
         self.canvas.mpl_connect('button_press_event', self.cancelar_selecao_elemento)
 
 
-    def selecionar_elementos(self, event):
+    def selecionar_elementos(self, event): #Parei aqui - continuar
 
         elemento  =  event.artist
 
@@ -1251,23 +1253,50 @@ class StructFrame():
             id  =  list(self.elementos.values()).index(elemento) + 1
             coordx1, coordx2, coordy1, coordy2  =  self.elem.coord_elem[id]
 
-            self.selecao_temporaria(id, coordx1, coordx2, coordy1, coordy2)
+            self.selecao_temporaria_elemento(id, coordx1, coordx2, coordy1, coordy2)
 
             if id not in self.id_elemento:
                 self.id_elemento.append(id)
 
         self.label_selecionados.configure(text = f'Selecionados: {len(self.id_elemento)} elemento')
+    
+    def selecionar_nos(self, event):
 
+        if event.xdata is None or event.ydata is None:
+            return
 
-    def selecao_temporaria(self, id , coordx1, coordx2, coordy1, coordy2):
+        x , y = event.xdata, event.ydata 
+
+        if self.grid_ativado:
+            x, y = self.snap_to_grid(x , y)
         
-        self.selecao_temp[id] = self.ax.plot([coordx1, coordx2], [coordy1, coordy2], 'b-', linewidth = 1, markersize = 1.5, markerfacecolor = 'blue', picker = True)
+        n = [x,y]
+
+        if n in self.nos.values():
+            id  =  list(self.nos.values()).index(n) + 1
+            coordx, coordy=  self.no.pos[id]
+
+            self.selecao_temporaria_no(id, coordx, coordy)
+
+            if id not in self.id_no:
+                self.id_no.append(id)
+
+        self.label_selecionados.configure(text = f'Selecionados: {len(self.id_no)} elemento')
+
+
+    def selecao_temporaria_elemento(self, id , coordx1, coordx2, coordy1, coordy2):
+        
+        self.selecao_temp_elem[id] = self.ax.plot([coordx1, coordx2], [coordy1, coordy2], 'b-', linewidth = 1, markersize = 1.5, markerfacecolor = 'blue', picker = True)
 
         self.canvas.draw()
 
+    def selecao_temporaria_no(self, id, coordx, coordy):
+            self.selecao_temp_no[id] = self.ax.scatter(coordx, coordy, color = 'r', marker = 'o', s = 10, picker = True)
+
+            self.canvas.draw()
 
     def desativar_selecao_elemento(self):
-        for id, elem in self.selecao_temp.items():
+        for id, elem in self.selecao_temp_elem.items():
             elem[0].remove()
         
         self.id_elemento.clear()
