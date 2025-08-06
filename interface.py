@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-from tkinter import messagebox, Menu, ttk
+from tkinter import messagebox, Menu
 from matplotlib.patches import Arc
 from matplotlib.ticker import MultipleLocator
 
@@ -18,8 +18,6 @@ from modulos.geometria import PropriedadeSecao as prop_secao
 class StructFrame():
     def __init__(self, root):
         super().__init__()
-
-
         
         self.configuracao_janela()
         self.variaveis_de_controle()
@@ -27,6 +25,7 @@ class StructFrame():
         self.grafico()
         self.widget()
         self.mpl_connect_events()
+
 
     def configuracao_janela(self):
         self.root  =  root
@@ -221,12 +220,30 @@ class StructFrame():
 
 
     def barra_de_propriedade(self):
+
         self.barra_prop  =  ctk.CTkFrame(self.root, width = 250, height = 674)
         self.barra_prop.place(relx = .82, rely = 0)
+
+        self.label_nome_barra = ctk.CTkLabel(self.barra_prop,
+                                               text=' ')
+        self.label_nome_barra.place(relx=.5, rely=.05, anchor=ctk.CENTER)
 
         self.label_selecionados = ctk.CTkLabel(self.barra_prop,
                                                text=f"Selecionados: {len(self.id_elemento)} elemento")
         self.label_selecionados.place(relx=.5, rely=.2, anchor=ctk.CENTER)
+    
+
+    def botoes_barra_propriedade(self, set, confirmar, cancelar):
+
+        self.bt_aplicar  =  ctk.CTkButton(self.barra_prop, text = "Aplicar", command = set, width = 3)
+        self.bt_aplicar.place(relx = .15, rely = .96, anchor  =  ctk.CENTER)
+
+        self.bt_ok  =  ctk.CTkButton(self.barra_prop, text = "OK", command = confirmar, width = 3)
+        self.bt_ok.place(relx = .6, rely = .96, anchor = ctk.CENTER)
+
+        self.bt_cancelar  =  ctk.CTkButton(self.barra_prop, text = "Cancelar",
+                                             command = cancelar, width = 3)
+        self.bt_cancelar.place(relx = .8, rely = .96, anchor = ctk.CENTER)
 
 
     def move_mouse(self, event):
@@ -793,22 +810,22 @@ class StructFrame():
             self.barra_de_propriedade()
 
             self.label_Fx  =  ctk.CTkLabel(self.barra_prop, text  =  "Fx:")
-            self.label_Fx.place(relx  =  .1, rely  =  .05, anchor = 'w')
+            self.label_Fx.place(relx  =  .05, rely  =  .1, anchor = 'w')
 
             self.entry_Fx  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_Fx.place(relx  =  .5, rely  =  .05, anchor = ctk.CENTER)
+            self.entry_Fx.place(relx  =  .5, rely  =  .1, anchor = ctk.CENTER)
 
             self.label_Fy  =  ctk.CTkLabel(self.barra_prop, text = "Fy:")
-            self.label_Fy.place(relx  =  .1, rely  =  .1, anchor = 'w')
+            self.label_Fy.place(relx  =  .05, rely  =  .15, anchor = 'w')
 
             self.entry_Fy  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_Fy.place(relx =  .5, rely =  .1, anchor = ctk.CENTER)
+            self.entry_Fy.place(relx =  .5, rely =  .15, anchor = ctk.CENTER)
 
             self.label_M  =  ctk.CTkLabel(self.barra_prop, text = "M:")
-            self.label_M.place(relx =  .1, rely =  .15, anchor = 'w')
+            self.label_M.place(relx =  .05, rely =  .2, anchor = 'w')
 
             self.entry_M  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_M.place(relx =  .5, rely =  .15, anchor = ctk.CENTER)
+            self.entry_M.place(relx =  .5, rely =  .2, anchor = ctk.CENTER)
 
             def set():
 
@@ -893,7 +910,7 @@ class StructFrame():
 
 
             self.bt_aplicar  =  ctk.CTkButton(self.barra_prop, text  =  "Aplicar", command  =  set, width  =  3)
-            self.bt_aplicar.place(relx = .8, rely = .25, anchor  =  ctk.CENTER)
+            self.bt_aplicar.place(relx = .8, rely = .4, anchor  =  ctk.CENTER)
 
             self.bt_ok  =  ctk.CTkButton(self.barra_prop, text  =  "OK", command  =  confirmar, width  =  3)
             self.bt_ok.place(relx = .6, rely = .96, anchor  =  ctk.CENTER)
@@ -923,13 +940,24 @@ class StructFrame():
 
         if self.barra_prop:
             self.barra_prop.destroy()
-
-        self.selecao_ok()
+        
+        if self.no.CoordNo != []:
+            self.selecao()
 
         if self.elem.elem:
             self.resetar_selecao_elemento()
 
             self.barra_de_propriedade()
+
+            if event  ==  'Concreto':
+                self.label_nome_barra.configure(text = 'Propriedade do material - Concreto')
+ 
+            elif event  ==  'Aço':
+                self.label_nome_barra.configure(text = 'Propriedade do material - Aço')
+                 
+            else:
+                self.label_nome_barra.configure(text = 'Propriedade do material - Genérico')
+
 
             self.label_prop_elem  =  ctk.CTkLabel(self.barra_prop, text = "E:")
             self.label_prop_elem.place(relx =  .05, rely = .1, anchor = 'w')
@@ -947,6 +975,7 @@ class StructFrame():
                     messagebox.showerror('Erro', 'Nenhum elemento foi selecionado')
 
                 elif event  ==  'Concreto':
+
                     for id in self.id_elemento:
                         id_  =  id
                         self.prop_elem.concreto(n_elem = id)
@@ -956,7 +985,7 @@ class StructFrame():
 
                     self.desativar_selecao_elemento()
 
-                    self.label_selecionados.configure(text = 'Propriedade aplicada')
+                    self.label_selecionados.configure(text = 'Propriedade do material aplicada')
 
                 elif event  ==  'Aço':
 
@@ -969,7 +998,7 @@ class StructFrame():
 
                     self.desativar_selecao_elemento()
 
-                    self.label_selecionados.configure(text  =  'Propriedade aplicada')
+                    self.label_selecionados.configure(text = 'Propriedade do material aplicada')
 
                 elif event  ==  'Genérico':
 
@@ -980,25 +1009,35 @@ class StructFrame():
 
                     self.desativar_selecao_elemento()
 
-                    self.label_selecionados.configure(text  = 'Propriedade aplicada')
+                    self.label_selecionados.configure(text = 'Propriedade do material aplicada')
 
 
             def cancelar():
                 self.fig.canvas.mpl_disconnect(self.id)
+                
+                try:
+                    self.desativar_selecao_elemento()
 
-                for id in self.id_elemento:
-                    self.prop_elem.prop_elem.pop(id)
-
-                if self.barra_prop:
-                    self.barra_prop.destroy()
+                    for id in self.id_elemento:
+                        self.prop_elem.prop_elem.pop(id)
+                except:
+                    pass
+                
+                self.barra_prop.destroy()
 
             def confirmar():
                 self.fig.canvas.mpl_disconnect(self.id)
-                if self.barra_prop:
-                    self.barra_prop.destroy()
+
+                try:
+                    self.desativar_selecao_elemento()
+                except:
+                    pass
+
+                self.barra_prop.destroy()
+
 
             self.bt_aplicar  =  ctk.CTkButton(self.barra_prop, text  =  "Aplicar", command  =  set, width  =  3)
-            self.bt_aplicar.place(relx = .8, rely = .25, anchor  =  ctk.CENTER)
+            self.bt_aplicar.place(relx = .8, rely = .4, anchor  =  ctk.CENTER)
 
             self.bt_ok  =  ctk.CTkButton(self.barra_prop, text  =  "OK", command  =  confirmar, width  =  3)
             self.bt_ok.place(relx = .6, rely = .96, anchor  =  ctk.CENTER)
@@ -1021,94 +1060,125 @@ class StructFrame():
         if self.barra_prop:
             self.barra_prop.destroy()
         
-
-
-        self.selecao_ok()
+        if self.no.CoordNo != []:
+            self.selecao()
 
         if event  ==  'Retangular' and self.no.CoordNo != []:
             self.resetar_selecao_elemento()
 
             self.barra_de_propriedade()
 
+            self.label_nome_barra.configure(text = 'Propriedade da seção - Retangular')
+
             self.label_base  =  ctk.CTkLabel(self.barra_prop, text = "Base:")
-            self.label_base.place(relx  =  .1, rely  =  .1, anchor = 'w')
+            self.label_base.place(relx  =  .05, rely  =  .1, anchor = 'w')
 
             self.entry_base  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_base.place(relx  =  .3, rely  =  .1, anchor = 'w')
+            self.entry_base.place(relx  =  .5, rely  =  .1, anchor = ctk.CENTER)
 
             self.label_altura  =  ctk.CTkLabel(self.barra_prop, text = "Altura:")
-            self.label_altura.place(relx  =  .1, rely =  .15, anchor = 'w')
+            self.label_altura.place(relx  =  .05, rely =  .15, anchor = 'w')
 
             self.entry_altura  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_altura.place(relx =  .3, rely =  .15, anchor = 'w')
+            self.entry_altura.place(relx =  .5, rely =  .15, anchor = ctk.CENTER)
 
             def set():
 
-                base  =  float(self.entry_base.get()) if self.entry_base.get() !=  '' else  .0
-                altura  =  float(self.entry_altura.get()) if self.entry_altura.get() !=  '' else  .0
+                if self.id_elemento == []:
+                    messagebox.showerror('Erro', 'Nenhum elemento foi selecionado')
+                
+                else:
 
-                for id in self.id_elemento:
-                    self.prop_secao.ret(base, altura, id)
+                    base  =  float(self.entry_base.get()) if self.entry_base.get() !=  '' else  .0
+                    altura  =  float(self.entry_altura.get()) if self.entry_altura.get() !=  '' else  .0
 
-                self.desativar_selecao_elemento()
+                    for id in self.id_elemento:
+                        self.prop_secao.ret(base, altura, id)
+                    
+                    self.label_selecionados.configure(text = 'Propriedade da seção aplicada')
+
+                    self.desativar_selecao_elemento()
 
             def confirmar():
                 self.fig.canvas.mpl_disconnect(self.id)
+
+                try:
+                    self.desativar_selecao_elemento()
+                except:
+                    pass
+
                 self.barra_prop.destroy()
 
             def cancelar():
                 self.fig.canvas.mpl_disconnect(self.id)
+                
+                try:
+                    self.desativar_selecao_elemento()
+
+                    for id in self.id_elemento:
+                        self.prop_secao.secao_elem.pop(id)
+                except:
+                    pass
+
                 self.barra_prop.destroy()
+            
+            self.botoes_barra_propriedade(set, confirmar, cancelar)
 
-            self.bt_aplicar  =  ctk.CTkButton(self.barra_prop, text = "Aplicar", command = set, width = 3)
-            self.bt_aplicar.place(relx = .8, rely = .25, anchor = ctk.CENTER)
-
-            self.bt_ok  =  ctk.CTkButton(self.barra_prop, text = "OK", command = confirmar, width = 3)
-            self.bt_ok.place(relx = .6, rely = .96, anchor = ctk.CENTER)
-
-            self.bt_cancelar  =  ctk.CTkButton(self.barra_prop, text = "Cancelar",
-                                             command = cancelar, width = 3)
-            self.bt_cancelar.place(relx = .8, rely = .96, anchor = ctk.CENTER)
 
         elif event  ==  'Circular' and self.no.CoordNo != []:
             self.resetar_selecao_elemento()
 
             self.barra_de_propriedade()
 
+            self.label_nome_barra.configure(text = 'Propriedade da seção - Circular')
+
             self.label_diametro  =  ctk.CTkLabel(self.barra_prop, text = "Diâmetro:")
-            self.label_diametro.place(relx =  .1, rely =  .1, anchor = 'w')
+            self.label_diametro.place(relx =  .05, rely =  .1, anchor = 'w')
 
             self.entry_diametro  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_diametro.place(relx =  .35, rely =  .1, anchor = 'w')
+            self.entry_diametro.place(relx = .6, rely =  .1, anchor = ctk.CENTER)
 
             def set():
-                diametro  =  float(self.entry_diametro.get()) if self.entry_diametro.get() !=  '' else  .0
 
-                for id in self.id_elemento:
-                    self.prop_secao.circ(diametro, id)
+                if self.id_elemento == []:
+                    messagebox.showerror('Erro', 'Nenhum elemento foi selecionado')
+                
+                else:
+                    diametro  =  float(self.entry_diametro.get()) if self.entry_diametro.get() !=  '' else  .0
 
-                self.desativar_selecao_elemento()
+                    for id in self.id_elemento:
+                        self.prop_secao.circ(diametro, id)
+                    
+                    self.label_selecionados.configure(text = 'Propriedade da seção aplicada')
 
-                if self.barra_prop is not None:
-                    self.barra_prop.destroy()
+                    self.desativar_selecao_elemento()
+
 
             def confirmar():
                 self.fig.canvas.mpl_disconnect(self.id)
+
+                try:
+                    self.desativar_selecao_elemento()
+                except:
+                    pass
+
                 self.barra_prop.destroy()
 
             def cancelar():
                 self.fig.canvas.mpl_disconnect(self.id)
+
+                try:
+                    self.desativar_selecao_elemento()
+
+                    for id in self.id_elemento:
+                        self.prop_secao.secao_elem.pop(id)
+                except:
+                    pass
+
                 self.barra_prop.destroy()
 
-            self.bt_aplicar  =  ctk.CTkButton(self.barra_prop, text  =  "Aplicar", command  =  set, width  =  3)
-            self.bt_aplicar.place(relx  =  .8, rely  =  .25, anchor  =  ctk.CENTER)
+            self.botoes_barra_propriedade(set, confirmar, cancelar)
 
-            self.bt_ok  =  ctk.CTkButton(self.barra_prop, text  =  "OK", command  = confirmar, width  =  3)
-            self.bt_ok.place(relx  =  .6, rely  =  .96, anchor  =  ctk.CENTER)
-
-            self.bt_cancelar  =  ctk.CTkButton(self.barra_prop, text  =  "Cancelar",
-                                             command = cancelar, width  =  3)
-            self.bt_cancelar.place(relx  =  .8, rely  =  .96, anchor  =  ctk.CENTER)
 
         elif event  ==  'Genérico' and self.no.CoordNo != []:
 
@@ -1116,52 +1186,65 @@ class StructFrame():
 
             self.barra_de_propriedade()
 
+            self.label_nome_barra.configure(text = 'Propriedade da seção - Genérico')
+
             self.label_area  =  ctk.CTkLabel(self.barra_prop, text = "Área:")
-            self.label_area.place(relx  =  .1, rely  =  .1, anchor = 'w')
+            self.label_area.place(relx  =  .05, rely  =  .1, anchor = 'w')
 
             self.entry_area  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_area.place(relx  =  .3, rely  =  .1, anchor = 'w')
+            self.entry_area.place(relx  =  .5, rely  =  .1, anchor = ctk.CENTER)
 
             self.label_inercia  =  ctk.CTkLabel(self.barra_prop, text  =  "Inércia:")
-            self.label_inercia.place(relx  =  .1, rely  =  .15, anchor = 'w')
+            self.label_inercia.place(relx  =  .05, rely  =  .15, anchor = 'w')
 
             self.entry_inercia  =  ctk.CTkEntry(self.barra_prop)
-            self.entry_inercia.place(relx  =  .3, rely  =  .15, anchor = 'w')
+            self.entry_inercia.place(relx  =  .5, rely  =  .15, anchor = ctk.CENTER)
 
             def set():
-                area  =  float(self.entry_area.get()) if self.entry_area.get() !=  '' else  .0
-                inercia  =  float(self.entry_inercia.get()) if self.entry_inercia.get() !=  '' else  .0
 
-                for id in self.id_elemento:
-                    self.prop_secao.generico(area, inercia, id)
+                if self.id_elemento == []:
+                    messagebox.showerror('Erro', 'Nenhum elemento foi selecionado')
+                
+                else:
+                    area  =  float(self.entry_area.get()) if self.entry_area.get() !=  '' else  .0
+                    inercia  =  float(self.entry_inercia.get()) if self.entry_inercia.get() !=  '' else  .0
 
-                self.fig.canvas.mpl_disconnect(self.selecao_ok)
+                    for id in self.id_elemento:
+                        self.prop_secao.generico(area, inercia, id)
 
-                self.desativar_selecao_elemento()
+                    self.label_selecionados.configure(text = 'Propriedade da seção aplicada')
 
-                if self.barra_prop is not None:
-                    self.barra_prop.destroy()
+                    self.desativar_selecao_elemento()
+
 
             def confirmar():
                 self.fig.canvas.mpl_disconnect(self.id)
+
+                try:
+                    self.desativar_selecao_elemento()
+                except:
+                    pass
+
                 self.barra_prop.destroy()
 
             def cancelar():
                 self.fig.canvas.mpl_disconnect(self.id)
+                
+                try:
+                    self.desativar_selecao_elemento()
+
+                    for id in self.id_elemento:
+                        self.prop_secao.secao_elem.pop(id)
+                
+                except:
+                    pass
+
                 self.barra_prop.destroy()
 
-            self.bt_aplicar  =  ctk.CTkButton(self.barra_prop, text = "Aplicar", command = set, width = 3)
-            self.bt_aplicar.place(relx = .8, rely = .25, anchor = ctk.CENTER)
-
-            self.bt_ok  =  ctk.CTkButton(self.barra_prop, text = "OK", command = confirmar, width = 3)
-            self.bt_ok.place(relx = .6, rely = .96, anchor = ctk.CENTER)
-
-            self.bt_cancelar  =  ctk.CTkButton(self.barra_prop, text = "Cancelar",
-                                             command = cancelar, width = 3)
-            self.bt_cancelar.place(relx = .8, rely = .96, anchor = ctk.CENTER)
+            self.botoes_barra_propriedade(set, confirmar, cancelar)
 
 
-    def selecao_ok(self):
+    def selecao(self):
         self.id  =  self.fig.canvas.mpl_connect("pick_event", self.selecionar_elementos)
         self.canvas.mpl_connect('button_press_event', self.cancelar_selecao_elemento)
 
@@ -1192,6 +1275,8 @@ class StructFrame():
     def desativar_selecao_elemento(self):
         for id, elem in self.selecao_temp.items():
             elem[0].remove()
+        
+        self.id_elemento.clear()
 
         self.canvas.draw()
             
@@ -1229,10 +1314,13 @@ class StructFrame():
         self.ax.clear()
         self.ax.set_xlim(self.limExIn, self.limExFi)
         self.ax.set_ylim(self.limEyIn, self.limEyFi)
+        self.ax.axhline(y  =  0, color  =  'b', linewidth  =  .8)
+        self.ax.axvline(x  =  0, color  =  'b', linewidth  =  .8)
 
         # Força os ticks a aparecerem em todas as unidades inteiras
         self.set_major_locator_x  =  self.ax.xaxis.set_major_locator(MultipleLocator(self.localizador_mult_x))
         self.set_major_locator_y  =  self.ax.yaxis.set_major_locator(MultipleLocator(self.localizador_mult_y))
+
 
         self.ax.grid(self.grid_ativado)
 
