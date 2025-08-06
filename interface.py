@@ -230,7 +230,7 @@ class StructFrame():
 
         self.label_selecionados = ctk.CTkLabel(self.barra_prop,
                                                text=f"Selecionados: {len(self.id_elemento)} elemento")
-        self.label_selecionados.place(relx=.5, rely=.2, anchor=ctk.CENTER)
+        self.label_selecionados.place(relx=.5, rely=.3, anchor=ctk.CENTER)
     
 
     def botoes_barra_propriedade(self, set, confirmar, cancelar):
@@ -654,18 +654,22 @@ class StructFrame():
             x, y  =  self.snap_to_grid(x, y)
 
         if [x, y] not in self.no.CoordNo:
-            messagebox.showerror("Erro",
+            '''messagebox.showerror("Erro",
                                      "Não foi possível inserir a força. O ponto selecionado não pertence a um nó.")
 
             self.canvas.draw()
-            self.fig.canvas.mpl_disconnect(self.adicionar_forca)
+            self.fig.canvas.mpl_disconnect(self.adicionar_forca)'''
 
-        id  =  self.no.CoordNo.index([x, y]) + 1
+            return
+        
+        else:
 
-        if id not in self.id_no:
-            self.id_no.append(id)
+            id  =  self.no.CoordNo.index([x, y]) + 1
 
-        self.label_selecionados.configure(text = f"Selecionados: {len(self.id_no)} nó")
+            if id not in self.id_no:
+                self.id_no.append(id)
+
+            self.label_selecionados.configure(text = f"Selecionados: {len(self.id_no)} nó")
 
 
     def selecionar_no_ok(self):
@@ -674,36 +678,27 @@ class StructFrame():
 
 
     def aplicar_apoios(self, event): #CORRIGIR OS APOIOS PARA REDIMENSIONAMENTO JUNTO COM O GRID DINÂMICO
-    
-        if self.no.CoordNo  ==  []:
-            messagebox.showerror("Erro", "Nenhum elemento foi encontrado.")
-
-        elif event  ==  'Fixo':
-            if self.elemento_ativado:
+        
+        if self.elemento_ativado:
                 self.elemento_ativado  =  False
                 self.menu.entryconfig('Elemento: ON', label = 'Elemento: OFF')
                 self.fig.canvas.mpl_disconnect(self.inserir_elem)
                 self.fig.canvas.mpl_disconnect(self.movimento)
+
+        if self.no.CoordNo  ==  []:
+            messagebox.showerror("Erro", "Nenhum elemento foi encontrado.")
+
+        elif event  ==  'Fixo':
 
             self.tipo_apoio  =  'Fixo'
             self.inserir_apoio  =  self.fig.canvas.mpl_connect("button_press_event", self.capturar_ponto_apoio)
             
         elif event  ==  'Móvel':
-            if self.elemento_ativado:
-                self.elemento_ativado  =  False
-                self.menu.entryconfig('Elemento: ON', label = 'Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir_elem)
-                self.fig.canvas.mpl_disconnect(self.movimento)
 
             self.tipo_apoio  =  'Móvel'
             self.inserir_apoio  =  self.fig.canvas.mpl_connect("button_press_event", self.capturar_ponto_apoio)
 
         elif event  ==  'Engaste':
-            if self.elemento_ativado :
-                self.elemento_ativado  =  False
-                self.menu.entryconfig('Elemento: ON', label = 'Elemento: OFF')
-                self.fig.canvas.mpl_disconnect(self.inserir_elem)
-                self.fig.canvas.mpl_disconnect(self.movimento)
                 
             self.tipo_apoio  =  'Engaste'
             self.inserir_apoio  =  self.fig.canvas.mpl_connect("button_press_event", self.capturar_ponto_apoio)
@@ -906,18 +901,17 @@ class StructFrame():
 
             def cancelar():
                 self.fig.canvas.mpl_disconnect(self.adicionar_forca)
+
+                try:
+                    for pos in self.id_no:
+                        self.no.pos.pop(pos)
+                except:
+                    pass
+
                 self.barra_prop.destroy()
 
 
-            self.bt_aplicar  =  ctk.CTkButton(self.barra_prop, text  =  "Aplicar", command  =  set, width  =  3)
-            self.bt_aplicar.place(relx = .8, rely = .4, anchor  =  ctk.CENTER)
-
-            self.bt_ok  =  ctk.CTkButton(self.barra_prop, text  =  "OK", command  =  confirmar, width  =  3)
-            self.bt_ok.place(relx = .6, rely = .96, anchor  =  ctk.CENTER)
-
-            self.bt_cancelar  =  ctk.CTkButton(self.barra_prop, text  =  "Cancelar",
-                                             command  =  cancelar, width  =  3)
-            self.bt_cancelar.place(relx  =  .8, rely  =  .96, anchor  =  ctk.CENTER)
+            self.botoes_barra_propriedade(set, confirmar, cancelar)
 
 
         elif event  ==  'Distribuída' and self.no.CoordNo != []:
