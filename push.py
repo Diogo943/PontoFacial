@@ -16,9 +16,10 @@ time.sleep(3)
 auto.typewrite('git pull origin main')
 auto.press('enter')
 
+time.sleep(5)
 usuario = os.environ.get('USERPROFILE')
-os.startfile(f'{usuario}\\PontoFacial_\\PontoFacial.py')
+os.startfile(f'{usuario}\\PontoFacial_\\model\\main.py')
 
-time.sleep(3)
+time.sleep(2)
 auto.typewrite('exit')
 auto.press('enter')
