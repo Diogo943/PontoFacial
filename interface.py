@@ -29,7 +29,7 @@ class StructFrame():
 
     def configuracao_janela(self):
         self.root  =  root
-        self.root.title("Análise Estrutural - Pórtico")
+        self.root.title("Análise Estrutural-Pórtico")
         self.root.geometry("1350x700+1+1")
         self.root.resizable(True, True)
 
