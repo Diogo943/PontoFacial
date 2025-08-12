@@ -487,7 +487,8 @@ class StructFrame():
 
                 self.elem.elemento(self.posi, self.posf)
 
-                linha,  =  self.ax.plot([x1, x2], [y1, y2], 'ro-', linewidth = 1, markersize = 1.5, markerfacecolor = 'blue', picker = True)
+
+                linha,  =  self.ax.plot([x1, x2], [y1, y2], 'r-', linewidth = 1, markersize = 1.5, markerfacecolor = 'blue', picker = True)
 
                 self.lb_coordenadas.configure(text = f'Coordenadas: ({x:.2f} , {y:.2f})          Tamanho: {self.elem.Lelem[self.elem.n_elem]:.2f}')
 
@@ -518,7 +519,7 @@ class StructFrame():
     def inserir_no(self):
         '''Retorna o ponto inserido'''
         for pos, coord in self.no.pos.items():
-            ponto_  =  self.ax.scatter(coord[0], coord[1], color = 'r', marker = 'o', s = 10, picker = True)
+            ponto_  =  self.ax.scatter(coord[0], coord[1], color = 'b', marker = 'o', s = 10, picker = True)
 
 
     def no_text(self):
@@ -1030,15 +1031,7 @@ class StructFrame():
                 self.barra_prop.destroy()
 
 
-            self.bt_aplicar  =  ctk.CTkButton(self.barra_prop, text  =  "Aplicar", command  =  set, width  =  3)
-            self.bt_aplicar.place(relx = .8, rely = .4, anchor  =  ctk.CENTER)
-
-            self.bt_ok  =  ctk.CTkButton(self.barra_prop, text  =  "OK", command  =  confirmar, width  =  3)
-            self.bt_ok.place(relx = .6, rely = .96, anchor  =  ctk.CENTER)
-
-            self.bt_cancelar  =  ctk.CTkButton(self.barra_prop, text  =  "Cancelar",
-                                             command  =  cancelar, width  =  3)
-            self.bt_cancelar.place(relx  =  .8, rely  =  .96, anchor  =  ctk.CENTER)
+            self.botoes_barra_propriedade(set, confirmar, cancelar)
 
 
     def aplicar_prop_secao(self, event):
@@ -1408,4 +1401,4 @@ if __name__  ==  "__main__":
         except:
             pass
     except ValueError as e:
-        print(e)
+        print(e) 
