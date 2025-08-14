@@ -45,9 +45,8 @@ class PontoFacial():
         self.ultima_deteccao = {}
         self.caminho_imagem_rostos = {}
         self.capturando = False
-        self.caminho_registro = r'C:\\PONTO_FACIAL\\REGISTROS\\registro_pontos.csv'
-        self.caminho_pasta = r'C:\\PONTO_FACIAL\\FOTOS_RECONHECIMENTO_FACIAL'
-        self.caminho_registro_excel = r'C:\\PONTO_FACIAL\\REGISTROS\\registro.xlsx'
+        self.caminho_pasta = os.getcwd().replace('model','\\FOTOS_RECONHECIMENTO_FACIAL')
+        self.caminho_registro_excel = os.getcwd().replace('model','\\REGISTROS\\registro.xlsx')
         self.nome = "Desconhecido"
 
 
@@ -58,13 +57,7 @@ class PontoFacial():
         # Inicializando InsightFace
         self.app = FaceAnalysis(name='buffalo_l')
         self.app.prepare(ctx_id=-1, det_size=(640, 640))
-        '''
-        if not os.path.exists(self.caminho_registro):
-            self.criar_registro()
-        else:
-            pass
-            print(f"Registro existente")
-        '''
+        
         
         self.rostos_conhecidos = {}
         self.carregar_rostos(self.caminho_pasta)
@@ -74,7 +67,7 @@ class PontoFacial():
 
 
     def path_fotos(self, nome):
-            return f'C:\\PONTO_FACIAL\\SECUTY\\Foto_{nome}.jpg'
+            return os.getcwd().replace('model',f'\\SECUTY\\Foto_{nome}.jpg')
 
     def criar_registro(self):
         with open(self.caminho_registro , "a", newline="") as arquivo:
