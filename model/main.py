@@ -11,7 +11,6 @@ for biblioteca in bibliotecas_requeridas:
         subprocess.check_call(['python', '-m', 'pip', 'install', biblioteca])
 
 
-
 import customtkinter as ctk
 import cv2
 import threading
@@ -24,9 +23,6 @@ import datetime
 import random
 import sys
 import openpyxl
-
-
-
 
 
 
