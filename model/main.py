@@ -64,6 +64,15 @@ class PontoFacial():
         ##########################################################################
 
 
+    def path_fotos(self, nome):
+            return f'C:\\PONTO_FACIAL\\SECUTY\\Foto_{nome}.jpg'
+
+    def criar_registro(self):
+        with open(self.caminho_registro , "a", newline="") as arquivo:
+            escritor = csv.writer(arquivo)
+            escritor.writerow(['Data', 'Hora', 'Nome', 'Tipo'])
+        print(f"Registro criado")
+
     def criar_registro_excel(self,data, hora, nome, tipo):
         planilha_registro = openpyxl.load_workbook(self.caminho_registro_excel)
         if 'Registro' not in planilha_registro.sheetnames:
