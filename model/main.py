@@ -1,7 +1,7 @@
 import subprocess
 
 
-bibliotecas_requeridas = ['cmake','customtkinter','opencv-contrib-python','numpy','pillow','insightface','onnxruntime', 'openpyxl']
+bibliotecas_requeridas = ['cmake','customtkinter','opencv-contrib-python','numpy','pillow','insightface','onnxruntime', 'openpyxl','opencv-python']
 
 for biblioteca in bibliotecas_requeridas:
     try:
@@ -20,8 +20,6 @@ import time
 from PIL import Image
 from insightface.app import FaceAnalysis
 import datetime
-import random
-import csv
 import openpyxl
 
 
@@ -55,7 +53,7 @@ class PontoFacial():
         self.alerta_usuario()
 
         # Inicializando InsightFace
-        self.app = FaceAnalysis(name='buffalo_l')
+        self.app = FaceAnalysis(name = 'buffalo_l')
         self.app.prepare(ctx_id=-1, det_size=(640, 640))
         
         
@@ -65,15 +63,6 @@ class PontoFacial():
         self.root.mainloop()
         ##########################################################################
 
-
-    def path_fotos(self, nome):
-            return os.getcwd().replace('model',f'\\SECUTY\\Foto_{nome}.jpg')
-
-    def criar_registro(self):
-        with open(self.caminho_registro , "a", newline="") as arquivo:
-            escritor = csv.writer(arquivo)
-            escritor.writerow(['Data', 'Hora', 'Nome', 'Tipo'])
-        print(f"Registro criado")
 
     def criar_registro_excel(self,data, hora, nome, tipo):
         planilha_registro = openpyxl.load_workbook(self.caminho_registro_excel)
@@ -131,13 +120,9 @@ class PontoFacial():
                 if self.nome != "Desconhecido" and (self.nome not in self.ultima_deteccao or (time.time() - self.ultima_deteccao[self.nome]) > 10):
                     self.ultima_deteccao[self.nome] = time.time()
                     threading.Thread(target=self.aguardar_e_mostrar_confirmacao, args=(self.nome,)).start()
-
-            cv2.imwrite(self.path_fotos(self.nome), frame)   
-            cv2.imshow("Reconhecimento Facial", frame)
-            
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        
+  
+            cv2.imshow('Ponto Facial', frame)
+      
         cap.release()
         cv2.destroyAllWindows()
 
@@ -182,7 +167,7 @@ class PontoFacial():
         self.main_frame.place(relx=0.01, rely=0.01, relwidth=0.98, relheight=0.98)
 
         self.label_titulo = ctk.CTkLabel(self.main_frame, text="\U0001F600",font=( 'times',250))
-        self.label_titulo.place(relx=0.55, rely=0.5, anchor=ctk.CENTER)
+        self.label_titulo.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
         
         self.botao_iniciar = ctk.CTkButton(self.main_frame, text="Iniciar", font=('Times New Roman', 30, 'bold'), command=self.iniciar_video)
         self.botao_iniciar.place(relx=0.5, rely=0.9, anchor=ctk.CENTER)
